@@ -1,0 +1,1317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Offline AI Chat — Wikipedia-fed</title>
+<style>
+  :root {
+    --bg: #0b0d12; --panel: #11141c; --panel-2: #161a23; --border: #232938;
+    --text: #e9edf6; --muted: #8b94a8; --muted-2: #5b6478;
+    --user: #3b82f6; --user-2: #2563eb; --bot: #1a1f2b; --accent: #34d399;
+    --warn: #f59e0b; --err: #ef4444;
+    --radius: 14px;
+    --shadow: 0 10px 30px -12px rgba(0,0,0,.5);
+  }
+  html[data-theme="light"] {
+    --bg:#f7f8fb; --panel:#fff; --panel-2:#f1f3f9; --border:#e4e8f0;
+    --text:#0f172a; --muted:#5b6478; --muted-2:#94a3b8; --bot:#fff;
+    --shadow: 0 10px 30px -12px rgba(15,23,42,.12);
+  }
+  @media (prefers-color-scheme: light) {
+    html[data-theme="auto"] {
+      --bg:#f7f8fb; --panel:#fff; --panel-2:#f1f3f9; --border:#e4e8f0;
+      --text:#0f172a; --muted:#5b6478; --muted-2:#94a3b8; --bot:#fff;
+      --shadow: 0 10px 30px -12px rgba(15,23,42,.12);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: radial-gradient(1200px 600px at 50% -200px, rgba(59,130,246,.08), transparent 60%), var(--bg);
+    color: var(--text);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+    display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: color-mix(in oklab, var(--panel) 80%, transparent);
+    backdrop-filter: saturate(140%) blur(8px);
+    position: sticky; top: 0; z-index: 10;
+  }
+  header h1 { font-size: 15px; margin: 0; font-weight: 650; letter-spacing: .2px; }
+  .status { font-size: 12px; color: var(--muted); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--warn);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--warn) 20%, transparent); }
+  .dot.ready { background: var(--accent); box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 20%, transparent); }
+  .dot.err { background: var(--err); box-shadow: 0 0 0 4px color-mix(in oklab, var(--err) 20%, transparent); }
+  .hw-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    font-size: 11px; padding: 3px 8px; border-radius: 999px;
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--muted);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .chip.on { color: var(--accent); border-color: color-mix(in oklab, var(--accent) 40%, var(--border)); }
+  .chip.off { color: var(--muted-2); }
+  main {
+    flex: 1; overflow-y: auto; padding: 18px 18px 24px;
+    max-width: 860px; width: 100%; margin: 0 auto;
+    scroll-behavior: smooth; contain: layout style;
+  }
+  .msg { margin: 12px 0; display: flex; animation: rise .25s ease both; }
+  @keyframes rise { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform:none; } }
+  .msg .bubble {
+    padding: 11px 14px; border-radius: var(--radius); max-width: 82%;
+    white-space: pre-wrap; word-wrap: break-word; line-height: 1.55;
+    position: relative;
+  }
+  .msg.user { justify-content: flex-end; }
+  .msg.user .bubble {
+    background: linear-gradient(180deg, var(--user), var(--user-2));
+    color: white; border-bottom-right-radius: 5px; box-shadow: var(--shadow);
+  }
+  .msg.bot .bubble {
+    background: var(--bot); border: 1px solid var(--border);
+    border-bottom-left-radius: 5px;
+  }
+  .msg.sys .bubble {
+    background: transparent; color: var(--muted); font-size: 12.5px; font-style: italic;
+    border: 1px dashed var(--border); padding: 6px 10px; border-radius: 10px;
+  }
+  .msg .row-actions {
+    position: absolute; top: 4px; right: 4px; display: flex; gap: 4px;
+    opacity: 0; transition: opacity .15s;
+  }
+  .msg.bot:hover .row-actions { opacity: 1; }
+  .row-actions button {
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--muted);
+    font-size: 11px; padding: 2px 6px; border-radius: 6px; cursor: pointer;
+  }
+  .row-actions button:hover { color: var(--text); }
+  .cursor::after { content: "▍"; opacity: .6; animation: blink 1s steps(1) infinite; margin-left: 2px; }
+  @keyframes blink { 50% { opacity: 0; } }
+  footer { border-top: 1px solid var(--border); padding: 10px 12px 14px; background: var(--panel); }
+  .composer { max-width: 860px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
+  textarea {
+    flex: 1; resize: none; min-height: 46px; max-height: 200px;
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; font: inherit; outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  textarea:focus { border-color: var(--user); box-shadow: 0 0 0 3px color-mix(in oklab, var(--user) 25%, transparent); }
+  button {
+    background: var(--user); color: white; border: 0;
+    padding: 10px 16px; border-radius: 12px; cursor: pointer; font-weight: 600;
+    transition: transform .08s, background .15s, opacity .15s; font-size: 14px;
+  }
+  button:hover:not(:disabled) { background: var(--user-2); }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  button.secondary:hover:not(:disabled) { background: var(--panel); }
+  button.ghost { background: transparent; color: var(--muted); padding: 4px 8px; font-size: 12px; font-weight: 500; }
+  button.ghost:hover:not(:disabled) { color: var(--text); background: var(--panel-2); }
+  button.danger { background: var(--err); }
+  button.danger:hover:not(:disabled) { background: #dc2626; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .progress { height: 3px; background: var(--border); overflow: hidden; }
+  .progress > div { height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--user), var(--accent));
+    transition: width .2s; }
+  .hint { font-size: 12px; color: var(--muted); padding: 6px 14px 0; max-width: 860px; margin: 0 auto; }
+  .hint #tokRate { color: var(--accent); font-variant-numeric: tabular-nums; }
+  code, kbd { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; font-size: 12px; border: 1px solid var(--border); }
+  select, input[type=text], input[type=number], input[type=range] {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 12.5px;
+    cursor: pointer;
+  }
+  select { max-width: 360px; }
+  select:hover { border-color: var(--user); }
+  optgroup { color: var(--muted); font-style: normal; }
+  details.drawer { max-width: 860px; margin: 0 auto; padding: 6px 0; }
+  details.drawer > summary {
+    cursor: pointer; font-size: 13px; color: var(--muted); padding: 4px 0; user-select: none;
+    list-style: none;
+  }
+  details.drawer > summary::before { content:"▸ "; display:inline-block; transition: transform .15s; }
+  details.drawer[open] > summary::before { transform: rotate(90deg); }
+  details.drawer > summary:hover { color: var(--text); }
+  .drawer-body {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px; margin-top: 8px;
+  }
+  .drawer-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .drawer-row:last-child { margin-bottom: 0; }
+  .drawer-row .meta { font-size: 12px; color: var(--muted); flex: 1; min-width: 200px; }
+  .drawer-row button { padding: 6px 10px; font-size: 12px; }
+  .drawer-row label { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .usage-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin: 8px 0; }
+  .usage-bar > div { height: 100%; background: var(--accent); transition: width .3s; width:0%; }
+  .usage-bar.warn > div { background: var(--warn); }
+  .usage-bar.full > div { background: var(--err); }
+  .kb-tag { display:inline-block; font-size:11px; background:var(--panel-2); color:var(--muted);
+    padding:2px 7px; border-radius:6px; margin:2px 4px 0 0; border:1px solid var(--border); }
+  .quick-btn {
+    background: linear-gradient(135deg, var(--accent), #10b981); color: #04221a;
+    padding: 6px 10px; font-size: 12px; font-weight: 700; border-radius: 8px;
+  }
+  .quick-btn:hover:not(:disabled) { background: linear-gradient(135deg, #34d399, #059669); }
+  .kb-result {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 10px; margin: 6px 0; font-size: 12.5px;
+  }
+  .kb-result .src { color: var(--muted); font-size: 11px; margin-bottom: 3px; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted-2); }
+  @media (max-width: 600px) {
+    header h1 { font-size: 14px; }
+    .hw-chips { width: 100%; order: 99; }
+    select { max-width: 100%; flex: 1; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <span class="dot" id="dot"></span>
+  <h1>Offline AI Chat</h1>
+  <span class="status" id="status">Loading model list…</span>
+  <span class="hw-chips" id="hwChips"></span>
+  <span style="flex:1"></span>
+  <button id="themeBtn" class="ghost" title="Toggle theme">🌗</button>
+  <button id="quickTiny" class="quick-btn" title="Load the smallest fastest model instantly">⚡ Quick start</button>
+  <select id="modelSel"></select>
+  <button id="loadBtn" class="secondary" style="padding:6px 12px;font-size:13px;">Load</button>
+  <button id="resetBtn" class="ghost" title="Clear chat">Clear</button>
+  <label class="chip" id="onlineWrap" title="Use a free cloud model instead of local"><input type="checkbox" id="onlineToggle" style="margin:0 4px 0 0;vertical-align:middle;"> Online</label>
+</header>
+<div class="progress"><div id="bar"></div></div>
+<main id="chat">
+  <div class="msg sys"><div class="bubble" id="introMsg">100% in-browser inference — runs <b>fully offline</b> after first download. Toggle <b>Online</b> in the header to chat via a free cloud model (no API key, no signup). Either way, Wikipedia articles you ingest stay in local storage as grounded background facts.</div></div>
+</main>
+<footer>
+  <details class="drawer" id="memDrawer">
+    <summary>▸ Local knowledge &amp; Wikipedia auto-feed — <span id="memStatusInline">loading…</span></summary>
+    <div class="drawer-body">
+      <div class="drawer-row">
+        <span class="meta">When online, this app fetches Wikipedia article summaries in the background. The AI runs offline and grounds its replies from this local KB.</span>
+        <button id="wikiToggle" class="secondary">Pause auto-feed</button>
+        <button id="wikiNow" class="secondary">Fetch 25 now</button>
+        <button id="kbReseed" class="secondary">Re-seed persona</button>
+        <button id="memClear" class="secondary danger">Clear all data</button>
+      </div>
+      <div class="drawer-row">
+        <input type="text" id="ingestTopic" placeholder="Ingest a specific Wikipedia article…" style="flex:1;min-width:200px;">
+        <button id="ingestBtn" class="secondary">Ingest topic</button>
+      </div>
+      <div class="drawer-row">
+        <input type="text" id="kbSearch" placeholder="Search your local knowledge base…" style="flex:1;min-width:200px;">
+        <button id="kbSearchBtn" class="secondary">Search KB</button>
+      </div>
+      <div id="kbResults"></div>
+      <div class="usage-bar" id="usageBar"><div></div></div>
+      <div class="meta" id="usageText">—</div>
+      <div class="meta" id="kbInfo" style="margin-top:6px;">Knowledge base: —</div>
+      <div class="meta" id="wikiStatus" style="margin-top:4px;">Wikipedia auto-feed: idle.</div>
+      <div class="drawer-row" style="margin-top:10px;">
+        <label>KB cap: <input type="range" id="kbCap" min="500" max="20000" step="500" value="8000" style="width:140px;"> <span id="kbCapVal">8000</span> entries</label>
+        <span class="meta">Oldest Wikipedia entries are evicted when the cap is reached.</span>
+      </div>
+      <details style="margin-top:6px;">
+        <summary class="meta" style="cursor:pointer;">▸ Seed-topic list (one Wikipedia title per line — optional)</summary>
+        <textarea id="wikiTopics" style="width:100%;min-height:80px;margin-top:6px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font:12px/1.4 monospace;" placeholder="Leave blank to pull random Wikipedia articles"></textarea>
+      </details>
+    </div>
+  </details>
+  <details class="drawer" id="genDrawer">
+    <summary>▸ Generation settings</summary>
+    <div class="drawer-body">
+      <div class="drawer-row">
+        <label>Temperature <input type="range" id="gTemp" min="0" max="1.5" step="0.05" value="0.6" style="width:140px;"> <span id="gTempVal">0.60</span></label>
+        <label>Top-p <input type="range" id="gTopP" min="0.1" max="1" step="0.05" value="0.9" style="width:140px;"> <span id="gTopPVal">0.90</span></label>
+        <label>Max tokens <input type="number" id="gMaxTok" min="32" max="4096" step="32" value="200" style="width:80px;"></label>
+        <label>Rep. penalty <input type="number" id="gRep" min="1" max="2" step="0.05" value="1.15" style="width:70px;"></label>
+      </div>
+      <div class="drawer-row">
+        <button id="exportJson" class="secondary">Export chat (JSON)</button>
+        <button id="exportMd" class="secondary">Export chat (Markdown)</button>
+        <button id="regenBtn" class="secondary">🔁 Regenerate last</button>
+      </div>
+    </div>
+  </details>
+  <div class="composer">
+    <textarea id="input" placeholder="Load a model first…" disabled></textarea>
+    <button id="send" disabled>Send</button>
+    <button id="stop" class="danger" style="display:none;">⏹ Stop</button>
+  </div>
+  <div class="hint" id="storageHint">Checking available storage… <span id="tokRate"></span></div>
+</footer>
+
+<script type="module">
+  // =========================================================================
+  // DOM
+  // =========================================================================
+  const $ = (id) => document.getElementById(id);
+  const dot = $('dot'), statusEl = $('status'), bar = $('bar'), chat = $('chat');
+  const input = $('input'), sendBtn = $('send'), stopBtn = $('stop');
+  const loadBtn = $('loadBtn'), resetBtn = $('resetBtn'), modelSel = $('modelSel');
+  const storageHint = $('storageHint'), tokRateEl = $('tokRate');
+  const memClear = $('memClear'), kbReseed = $('kbReseed');
+  const memStatusInline = $('memStatusInline');
+  const usageBar = $('usageBar'), usageText = $('usageText'), kbInfo = $('kbInfo');
+  const wikiStatus = $('wikiStatus'), wikiToggle = $('wikiToggle'), wikiNow = $('wikiNow');
+  const wikiTopics = $('wikiTopics'), hwChips = $('hwChips'), quickTiny = $('quickTiny');
+  const themeBtn = $('themeBtn');
+  const ingestTopic = $('ingestTopic'), ingestBtn = $('ingestBtn');
+  const kbSearch = $('kbSearch'), kbSearchBtn = $('kbSearchBtn'), kbResults = $('kbResults');
+  const kbCap = $('kbCap'), kbCapVal = $('kbCapVal');
+  const gTemp = $('gTemp'), gTopP = $('gTopP'), gMaxTok = $('gMaxTok'), gRep = $('gRep');
+  const gTempVal = $('gTempVal'), gTopPVal = $('gTopPVal');
+  const exportJson = $('exportJson'), exportMd = $('exportMd'), regenBtn = $('regenBtn');
+
+  // =========================================================================
+  // THEME
+  // =========================================================================
+  const THEMES = ['auto','dark','light'];
+  let theme = (() => { try { return localStorage.getItem('ai:theme') || 'auto'; } catch { return 'auto'; } })();
+  function applyTheme() { document.documentElement.dataset.theme = theme; themeBtn.textContent = theme==='light'?'☀️':theme==='dark'?'🌙':'🌗'; themeBtn.title = `Theme: ${theme} (click to cycle)`; }
+  themeBtn.addEventListener('click', () => { theme = THEMES[(THEMES.indexOf(theme)+1)%THEMES.length]; try{localStorage.setItem('ai:theme',theme);}catch{} applyTheme(); });
+  applyTheme();
+
+  // =========================================================================
+  // MODEL CATALOG (unchanged — open-weight ONNX models on HF)
+  // =========================================================================
+  const MODELS = [
+    { id:'HuggingFaceTB/SmolLM2-135M-Instruct', label:'⚡ SmolLM2 135M — instant, ultra-light', mb:110, group:'⚡ Tiny & fast (recommended)' },
+    { id:'HuggingFaceTB/SmolLM2-360M-Instruct', label:'⚡ SmolLM2 360M — fast, smarter than 135M', mb:260, group:'⚡ Tiny & fast (recommended)' },
+    { id:'onnx-community/LFM2-350M-ONNX', label:'⚡ Liquid LFM2 350M — efficient state-space', mb:300, group:'⚡ Tiny & fast (recommended)' },
+    { id:'onnx-community/Qwen2.5-0.5B-Instruct', label:'⚡ Qwen2.5 0.5B — best tiny generalist', mb:380, group:'⚡ Tiny & fast (recommended)' },
+    { id:'onnx-community/Qwen3-0.6B-ONNX', label:'⚡ Qwen3 0.6B — newest tiny (2025)', mb:500, group:'⚡ Tiny & fast (recommended)' },
+    { id:'onnx-community/LFM2-700M-ONNX', label:'⚡ Liquid LFM2 700M — still snappy', mb:600, group:'⚡ Tiny & fast (recommended)' },
+    { id:'onnx-community/Llama-3.2-1B-Instruct-q4f16', label:'⚡ Llama 3.2 1B q4f16 — quantized small', mb:700, group:'⚡ Tiny & fast (recommended)' },
+    { id:'onnx-community/gpt-oss-20b-ONNX', label:'OpenAI gpt-oss 20B (MoE, Aug 2025)', mb:13000, group:'OpenAI (open-weight)' },
+    { id:'onnx-community/gpt-oss-120b-ONNX', label:'OpenAI gpt-oss 120B — ULTRA', mb:65000, group:'OpenAI (open-weight)' },
+    { id:'onnx-community/Llama-3.2-1B-Instruct', label:'Llama 3.2 1B Instruct', mb:850, group:'Meta · Llama' },
+    { id:'onnx-community/Llama-3.2-3B-Instruct', label:'Llama 3.2 3B Instruct', mb:2400, group:'Meta · Llama' },
+    { id:'onnx-community/Meta-Llama-3.1-8B-Instruct', label:'Llama 3.1 8B Instruct', mb:5800, group:'Meta · Llama' },
+    { id:'onnx-community/Llama-3.3-8B-Instruct-ONNX', label:'Llama 3.3 8B Instruct', mb:5800, group:'Meta · Llama' },
+    { id:'onnx-community/Qwen2.5-0.5B-Instruct', label:'Qwen2.5 0.5B Instruct', mb:380, group:'Alibaba · Qwen' },
+    { id:'onnx-community/Qwen2.5-1.5B-Instruct', label:'Qwen2.5 1.5B Instruct', mb:1100, group:'Alibaba · Qwen' },
+    { id:'onnx-community/Qwen2.5-3B-Instruct', label:'Qwen2.5 3B Instruct', mb:2400, group:'Alibaba · Qwen' },
+    { id:'onnx-community/Qwen2.5-7B-Instruct', label:'Qwen2.5 7B Instruct', mb:5200, group:'Alibaba · Qwen' },
+    { id:'onnx-community/Qwen2.5-Coder-1.5B-Instruct', label:'Qwen2.5-Coder 1.5B', mb:1100, group:'Alibaba · Qwen' },
+    { id:'onnx-community/Qwen2.5-Coder-7B-Instruct', label:'Qwen2.5-Coder 7B', mb:5200, group:'Alibaba · Qwen' },
+    { id:'onnx-community/Qwen3-0.6B-ONNX', label:'Qwen3 0.6B', mb:500, group:'Alibaba · Qwen' },
+    { id:'onnx-community/Qwen3-1.7B-ONNX', label:'Qwen3 1.7B', mb:1200, group:'Alibaba · Qwen' },
+    { id:'onnx-community/Qwen3-4B-ONNX', label:'Qwen3 4B', mb:2800, group:'Alibaba · Qwen' },
+    { id:'onnx-community/Qwen3-4B-Thinking-2507-ONNX', label:'Qwen3 4B Thinking (reasoning)', mb:2800, group:'Alibaba · Qwen' },
+    { id:'onnx-community/Qwen3-8B-ONNX', label:'Qwen3 8B', mb:5800, group:'Alibaba · Qwen' },
+    { id:'onnx-community/DeepSeek-R1-Distill-Qwen-1.5B-ONNX', label:'DeepSeek-R1-Distill Qwen 1.5B', mb:1100, group:'DeepSeek (reasoning)' },
+    { id:'onnx-community/DeepSeek-R1-Distill-Qwen-7B-ONNX', label:'DeepSeek-R1-Distill Qwen 7B', mb:5000, group:'DeepSeek (reasoning)' },
+    { id:'onnx-community/DeepSeek-R1-Distill-Llama-8B-ONNX', label:'DeepSeek-R1-Distill Llama 8B', mb:5800, group:'DeepSeek (reasoning)' },
+    { id:'onnx-community/gemma-3-1b-it-ONNX', label:'Gemma 3 1B IT', mb:900, group:'Google · Gemma' },
+    { id:'onnx-community/gemma-3-4b-it-ONNX', label:'Gemma 3 4B IT', mb:2600, group:'Google · Gemma' },
+    { id:'onnx-community/gemma-2-2b-it', label:'Gemma 2 2B IT', mb:1600, group:'Google · Gemma' },
+    { id:'onnx-community/Phi-3.5-mini-instruct-onnx-web', label:'Phi-3.5 Mini Instruct (3.8B)', mb:2200, group:'Microsoft · Phi' },
+    { id:'onnx-community/Phi-4-mini-instruct-ONNX', label:'Phi-4 Mini Instruct (3.8B)', mb:2400, group:'Microsoft · Phi' },
+    { id:'onnx-community/Phi-4-mini-reasoning-ONNX', label:'Phi-4 Mini Reasoning (3.8B)', mb:2400, group:'Microsoft · Phi' },
+    { id:'onnx-community/Mistral-7B-Instruct-v0.3', label:'Mistral 7B Instruct v0.3', mb:4800, group:'Mistral AI' },
+    { id:'HuggingFaceTB/SmolLM2-1.7B-Instruct', label:'SmolLM2 1.7B', mb:1100, group:'HuggingFace · SmolLM' },
+    { id:'HuggingFaceTB/SmolLM3-3B-ONNX', label:'SmolLM3 3B', mb:2500, group:'HuggingFace · SmolLM' },
+    { id:'onnx-community/granite-3.1-2b-instruct-ONNX', label:'IBM Granite 3.1 2B Instruct', mb:1500, group:'IBM · Granite' },
+    { id:'onnx-community/Falcon3-3B-Instruct-ONNX', label:'TII Falcon 3 3B Instruct', mb:2400, group:'TII · Falcon' },
+    { id:'onnx-community/EXAONE-3.5-2.4B-Instruct-ONNX', label:'LG EXAONE 3.5 2.4B Instruct', mb:1800, group:'LG AI · EXAONE' },
+    { id:'onnx-community/OLMo-2-1124-7B-Instruct-ONNX', label:'AI2 OLMo 2 7B Instruct', mb:5200, group:'AI2 · OLMo' },
+    { id:'onnx-community/LFM2-350M-ONNX', label:'Liquid LFM2 350M', mb:300, group:'Liquid AI · LFM2' },
+    { id:'onnx-community/LFM2-700M-ONNX', label:'Liquid LFM2 700M', mb:600, group:'Liquid AI · LFM2' },
+    { id:'onnx-community/LFM2-1.2B-ONNX', label:'Liquid LFM2 1.2B', mb:1000, group:'Liquid AI · LFM2' },
+    { id:'onnx-community/Nemotron-Research-Reasoning-Qwen-1.5B-ONNX', label:'NVIDIA Nemotron Reasoning 1.5B', mb:1100, group:'NVIDIA · Nemotron' },
+    { id:'onnx-community/OpenMath-Nemotron-1.5B-ONNX', label:'NVIDIA OpenMath Nemotron 1.5B', mb:1100, group:'NVIDIA · Nemotron' },
+    { id:'onnx-community/Hermes-3-Llama-3.2-3B-ONNX', label:'Nous Hermes-3 Llama 3B', mb:1500, group:'Nous Research · Hermes' },
+  ];
+
+
+  function detectFloat16() {
+    try { if (typeof Float16Array === 'undefined') return false;
+      const a = new Float16Array(1); a[0] = 1.5;
+      return a[0] === 1.5 && a.BYTES_PER_ELEMENT === 2;
+    } catch { return false; }
+  }
+  const HAS_FLOAT16 = detectFloat16();
+  const HAS_WEBGPU = 'gpu' in navigator;
+  const HAS_SAB = typeof SharedArrayBuffer !== 'undefined';
+  const HW_CORES = Math.max(1, navigator.hardwareConcurrency || 2);
+  const DEV_MEM_GB = navigator.deviceMemory || 0;
+  const ORT_THREADS = HAS_SAB ? Math.min(8, Math.max(1, HW_CORES - 1)) : 1;
+  let GPU_INFO = null;
+
+  async function detectBackend() {
+    if (!HAS_WEBGPU) return { device:'wasm', f16:false };
+    try {
+      const adapter = await navigator.gpu.requestAdapter({ powerPreference:'high-performance' });
+      if (!adapter) return { device:'wasm', f16:false };
+      const gpuF16 = adapter.features?.has?.('shader-f16') ?? false;
+      try { GPU_INFO = await adapter.requestAdapterInfo?.(); } catch {}
+      return { device:'webgpu', f16:gpuF16 };
+    } catch { return { device:'wasm', f16:false }; }
+  }
+
+  function renderHwChips() {
+    const chips = [
+      { label:`${HW_CORES} cores`, on:HW_CORES>=4 },
+      { label:DEV_MEM_GB?`${DEV_MEM_GB} GB RAM`:'RAM ?', on:!DEV_MEM_GB||DEV_MEM_GB>=4 },
+      { label:HAS_WEBGPU?'WebGPU':'WebGPU off', on:HAS_WEBGPU, off:!HAS_WEBGPU },
+      { label:HAS_SAB?`${ORT_THREADS}-thread WASM`:'1-thread WASM', on:HAS_SAB, off:!HAS_SAB },
+      { label:HAS_FLOAT16?'f16':'f32 only', on:HAS_FLOAT16, off:!HAS_FLOAT16 },
+    ];
+    if (GPU_INFO?.vendor) chips.push({ label:`${GPU_INFO.vendor}${GPU_INFO.architecture?' · '+GPU_INFO.architecture:''}`, on:true });
+    hwChips.innerHTML = chips.map(c => `<span class="chip ${c.on?'on':''} ${c.off?'off':''}">${c.label}</span>`).join('');
+  }
+
+  const APP_CAP_BYTES = 5 * 1024 * 1024 * 1024;
+  const DB_NAME = 'offline-ai-chat';
+  const DB_VERSION = 2;
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = () => {
+        const d = req.result;
+        if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv', { keyPath:'key' });
+        if (!d.objectStoreNames.contains('msgs')) {
+          const s = d.createObjectStore('msgs', { keyPath:'id', autoIncrement:true });
+          s.createIndex('ts','ts');
+        }
+        if (!d.objectStoreNames.contains('knowledge')) {
+          const k = d.createObjectStore('knowledge', { keyPath:'id', autoIncrement:true });
+          k.createIndex('source','source');
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  function estBytes(o) {
+    if (!o) return 0;
+    if (typeof o === 'string') return o.length * 2 + 24;
+    if (Array.isArray(o)) { let n=24; for (const v of o) n += estBytes(v); return n; }
+    if (typeof o === 'object') { let n=24; for (const k in o) n += k.length*2 + estBytes(o[k]); return n; }
+    return 8;
+  }
+  function p(req) { return new Promise((res, rej) => { req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error); }); }
+
+  const db = {
+    _db:null, bytesUsed:0, kbCount:0,
+    async init() {
+      try {
+        this._db = await openDB();
+        const t = this._db.transaction(['kv','msgs','knowledge']);
+        const counts = await Promise.all([
+          p(t.objectStore('kv').count()),
+          p(t.objectStore('msgs').count()),
+          p(t.objectStore('knowledge').count()),
+        ]);
+        this.kbCount = counts[2];
+        // Initial bytes — sample via storage.estimate (real) instead of walking.
+        await this.refreshBytesFromQuota();
+        return true;
+      } catch (e) { console.error('[db]', e); return false; }
+    },
+    async refreshBytesFromQuota() {
+      try {
+        if (navigator.storage?.estimate) {
+          const { usage = 0 } = await navigator.storage.estimate();
+          this.bytesUsed = usage;
+        }
+      } catch {}
+    },
+    async getKV(k) {
+      const t = this._db.transaction(['kv']);
+      return (await p(t.objectStore('kv').get(k)))?.value;
+    },
+    async setKV(k, v) {
+      const t = this._db.transaction(['kv'], 'readwrite');
+      t.objectStore('kv').put({ key:k, value:v });
+      this.bytesUsed += estBytes(v);
+      return new Promise((r,j) => { t.oncomplete=r; t.onerror=()=>j(t.error); });
+    },
+    async addMessage(msg) {
+      const row = { ts:Date.now(), ...msg };
+      const t = this._db.transaction(['msgs'], 'readwrite');
+      t.objectStore('msgs').add(row);
+      this.bytesUsed += estBytes(row);
+      return new Promise((r,j) => { t.oncomplete=r; t.onerror=()=>j(t.error); });
+    },
+    async lastMessages(limit = 40) {
+      return new Promise((res, rej) => {
+        const out = []; const t = this._db.transaction(['msgs']);
+        t.objectStore('msgs').index('ts').openCursor(null, 'prev').onsuccess = (e) => {
+          const c = e.target.result;
+          if (c && out.length < limit) { out.push(c.value); c.continue(); }
+        };
+        t.oncomplete = () => res(out.reverse()); t.onerror = () => rej(t.error);
+      });
+    },
+    async allKnowledge() {
+      return new Promise((res, rej) => {
+        const out = []; const t = this._db.transaction(['knowledge']);
+        t.objectStore('knowledge').openCursor().onsuccess = (e) => {
+          const c = e.target.result; if (c) { out.push(c.value); c.continue(); }
+        };
+        t.oncomplete = () => res(out); t.onerror = () => rej(t.error);
+      });
+    },
+    async putKnowledgeBulk(items) {
+      if (!items.length) return [];
+      const t = this._db.transaction(['knowledge'], 'readwrite');
+      const s = t.objectStore('knowledge');
+      const ids = new Array(items.length);
+      for (let i = 0; i < items.length; i++) {
+        const r = s.add(items[i]);
+        r.onsuccess = (e) => { items[i].id = e.target.result; ids[i] = items[i].id; };
+        this.bytesUsed += estBytes(items[i]);
+      }
+      await new Promise((r,j) => { t.oncomplete=r; t.onerror=()=>j(t.error); });
+      this.kbCount += items.length;
+      return ids;
+    },
+    async deleteKnowledgeIds(ids) {
+      if (!ids.length) return;
+      const t = this._db.transaction(['knowledge'], 'readwrite');
+      const s = t.objectStore('knowledge');
+      for (const id of ids) s.delete(id);
+      await new Promise((r,j) => { t.oncomplete=r; t.onerror=()=>j(t.error); });
+      this.kbCount -= ids.length;
+    },
+    async clearKnowledge() {
+      const t = this._db.transaction(['knowledge'], 'readwrite');
+      t.objectStore('knowledge').clear();
+      await new Promise((r,j) => { t.oncomplete=r; t.onerror=()=>j(t.error); });
+      this.kbCount = 0;
+      await this.refreshBytesFromQuota();
+    },
+    async clearAll() {
+      const t = this._db.transaction(['kv','msgs','knowledge'], 'readwrite');
+      for (const s of ['kv','msgs','knowledge']) t.objectStore(s).clear();
+      await new Promise((r,j) => { t.oncomplete=r; t.onerror=()=>j(t.error); });
+      try { localStorage.removeItem('offline-ai-chat:lastModel'); } catch {}
+      this.kbCount = 0; this.bytesUsed = 0;
+    },
+  };
+
+
+  const KB_VERSION = 6;
+  const SEED_KB = [
+    { source:'persona', tags:['style','tone','identity'], text:"You are Ada, a warm, thoughtful, plainspoken assistant. You speak like a knowledgeable friend: short paragraphs, real opinions, occasional dry humor. You avoid corporate filler (\"As an AI…\", \"Certainly!\", \"I hope this helps!\")." },
+    { source:'persona', tags:['style','format'], text:'Answer the actual question first in one or two sentences, then add detail only if useful. Use bullet lists only when comparing 3+ items. Never invent extra user turns or roleplay both sides.' },
+    { source:'persona', tags:['honesty','uncertainty'], text:'If unsure, say so plainly ("I\'m not sure, but…"). Never fabricate citations, URLs, statistics, names, or quotes. Prefer "I don\'t know" to a confident guess.' },
+    { source:'persona', tags:['safety'], text:'Refuse instructions for clearly harmful actions (weapons, malware, self-harm methods). Otherwise be helpful and direct without moralizing.' },
+    { source:'persona', tags:['memory','context'], text:'Treat the "Relevant knowledge" section as background facts you may use without citing.' },
+    { source:'persona', tags:['style','length'], text:'Default to brief: 1–4 sentences for simple questions. Only expand to multi-paragraph when the user asks for depth, a tutorial, or detailed analysis.' },
+    { source:'persona', tags:['style','code'], text:'For code, return one self-contained snippet in a fenced block tagged with the language, then 1–2 lines of explanation max.' },
+    { source:'world', tags:['physics','light','c'], text:'The speed of light in vacuum is exactly 299,792,458 m/s. Nothing carrying information can travel faster.' },
+    { source:'world', tags:['physics','gravity'], text:"Earth's surface gravity averages 9.81 m/s². The Moon's is ~1.62 m/s² (about 1/6 of Earth's)." },
+    { source:'world', tags:['physics','newton','motion'], text:"Newton's laws: (1) inertia; (2) F = m·a; (3) every action has an equal and opposite reaction." },
+    { source:'world', tags:['physics','thermodynamics'], text:'Thermodynamics: (1) energy is conserved; (2) entropy of an isolated system never decreases.' },
+    { source:'world', tags:['physics','ohm','electricity'], text:"Ohm's law: V = I·R. Power P = V·I = I²·R = V²/R." },
+    { source:'world', tags:['physics','relativity','einstein'], text:'Special relativity: E = m·c². General relativity: gravity is the curvature of spacetime.' },
+    { source:'world', tags:['chemistry','water'], text:'Water is H₂O. Liquid at room temperature thanks to hydrogen bonding.' },
+    { source:'world', tags:['chemistry','ph','acid','base'], text:'pH 0–14: <7 acidic, 7 neutral, >7 basic. Each unit is a 10× change.' },
+    { source:'world', tags:['chemistry','atmosphere','air'], text:"Earth's dry atmosphere: ~78% N₂, ~21% O₂, ~0.93% Ar, ~0.04% CO₂." },
+    { source:'world', tags:['biology','dna'], text:'DNA is a double helix of nucleotides (A, T, C, G). Humans have ~3 billion base pairs and ~20,000 protein-coding genes.' },
+    { source:'world', tags:['biology','evolution','darwin'], text:'Evolution by natural selection (Darwin, 1859): heritable variations that improve survival/reproduction become more common.' },
+    { source:'world', tags:['biology','heart'], text:'Human heart: 4 chambers, ~60–100 bpm at rest, ~5 L/min cardiac output. Adults have ~5 L of blood.' },
+    { source:'world', tags:['biology','brain','neurons'], text:'The human brain has ~86 billion neurons and uses ~20% of the body\'s energy.' },
+    { source:'world', tags:['biology','photosynthesis'], text:'Photosynthesis: 6 CO₂ + 6 H₂O + light → C₆H₁₂O₆ + 6 O₂.' },
+    { source:'world', tags:['astronomy','planets'], text:'Planets from the Sun: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune. Pluto is a dwarf planet.' },
+    { source:'world', tags:['astronomy','sun'], text:'The Sun is a G-type main-sequence star, ~4.6 Gyr old, ~150M km from Earth (1 AU). Light takes ~8 min 20 s to reach us.' },
+    { source:'world', tags:['astronomy','moon'], text:'The Moon is ~384,400 km away, orbits in ~27.3 days, and causes tides.' },
+    { source:'world', tags:['astronomy','milky way'], text:'The Milky Way is a barred spiral galaxy ~100,000 ly across with ~100–400 billion stars.' },
+    { source:'world', tags:['astronomy','big bang'], text:'The observable universe is ~13.8 billion years old. Expansion is accelerating.' },
+    { source:'world', tags:['geography','countries'], text:'Most populous countries (2024): India (~1.43B), China (~1.42B), USA (~335M), Indonesia (~280M), Pakistan (~240M).' },
+    { source:'world', tags:['geography','oceans'], text:'Five oceans: Pacific (largest), Atlantic, Indian, Southern, Arctic.' },
+    { source:'world', tags:['geography','mountains'], text:'Highest mountain above sea level: Mount Everest (~8,849 m).' },
+    { source:'world', tags:['tech','internet'], text:'The Internet is a global network of networks using TCP/IP. The World Wide Web (Tim Berners-Lee, 1989) is one of its services.' },
+    { source:'world', tags:['tech','computer'], text:'Modern computers follow the von Neumann architecture: CPU, memory, I/O sharing a single address space.' },
+    { source:'world', tags:['tech','ai'], text:'Large language models predict the next token given a context. They are trained with self-supervised learning on massive text corpora.' },
+    { source:'pattern', tags:['greeting','hello'], text:'When greeted, reply with a brief warm greeting (one sentence) and ask what the user wants to do.' },
+    { source:'pattern', tags:['thanks','goodbye'], text:"When thanked or said goodbye, respond briefly and warmly without restating everything." },
+    { source:'pattern', tags:['definition','what is','explain'], text:'For "what is X" questions, lead with a one-sentence plain-English definition, then optionally one short paragraph of context.' },
+    { source:'pattern', tags:['compare','vs','difference'], text:'For comparisons, lead with the headline difference, then 2–4 bullets, then a one-line recommendation.' },
+    { source:'pattern', tags:['summarize'], text:'When asked to summarize, give a one-sentence headline, then 3–5 short bullets in the source\'s order.' },
+  ];
+
+
+  const STOPWORDS = new Set("the a an of and or to in on at for is are was were be been being it its this that these those i you he she we they them us my your our their what which who whom when where why how do does did can could should would will just like get got make made about with from into over under more most less few any some not no yes if so as by but than then there here".split(' '));
+  function tokenize(s) {
+    const out = [];
+    const m = (s||'').toLowerCase().match(/[a-z][a-z0-9]{2,}/g);
+    if (!m) return out;
+    const seen = new Set();
+    for (const t of m) if (!STOPWORDS.has(t) && !seen.has(t)) { seen.add(t); out.push(t); }
+    return out;
+  }
+
+  let KB_CACHE = [];          
+  let INDEX = new Map();      
+  const WIKI_TITLES = new Set();
+
+  function indexAdd(entry, idx) {
+    const tokens = new Set([...(entry.tags||[]).flatMap(t => tokenize(t)), ...tokenize(entry.text).slice(0, 200)]);
+    entry._toks = tokens;
+    for (const t of tokens) {
+      let s = INDEX.get(t); if (!s) { s = new Set(); INDEX.set(t, s); }
+      s.add(idx);
+    }
+  }
+  function indexRemove(entry, idx) {
+    if (!entry?._toks) return;
+    for (const t of entry._toks) {
+      const s = INDEX.get(t); if (!s) continue;
+      s.delete(idx);
+      if (!s.size) INDEX.delete(t);
+    }
+  }
+  function rebuildIndex() {
+    INDEX = new Map();
+    for (let i = 0; i < KB_CACHE.length; i++) if (KB_CACHE[i]) indexAdd(KB_CACHE[i], i);
+  }
+
+  // BM25-ish scoring with IDF + length normalisation, so a single shared common
+  // word doesn't drag in a random Wikipedia stub. Only facts that clear a min
+  // relevance bar are returned, otherwise we inject nothing (better than noise).
+  const BM25 = { k1: 1.4, b: 0.75 };
+  function retrieveContext(userText, k = 6) {
+    if (!KB_CACHE.length) return { persona:[], facts:[], patterns:[] };
+    const qTokens = Array.from(new Set(tokenize(userText)));
+    const N = KB_CACHE.filter(Boolean).length || 1;
+    // Average doc length (in indexed tokens) for BM25 length norm.
+    let totalLen = 0, docs = 0;
+    for (const e of KB_CACHE) if (e?._toks) { totalLen += e._toks.size; docs++; }
+    const avgdl = docs ? totalLen / docs : 1;
+
+    const scores = new Map();
+    for (const t of qTokens) {
+      const postings = INDEX.get(t); if (!postings) continue;
+      const df = postings.size;
+      const idf = Math.log(1 + (N - df + 0.5) / (df + 0.5));
+      // Cheap query-token weight: skip ultra-common tokens.
+      if (idf < 0.2) continue;
+      for (const idx of postings) {
+        const e = KB_CACHE[idx]; if (!e) continue;
+        const dl = e._toks ? e._toks.size : 1;
+        const norm = 1 - BM25.b + BM25.b * (dl / avgdl);
+        // tf is 1 in a Set-based index; BM25 with binary tf still gives sane ranking.
+        const contrib = idf * ((BM25.k1 + 1) / (1 + BM25.k1 * norm));
+        scores.set(idx, (scores.get(idx) || 0) + contrib);
+      }
+    }
+
+    // Persona: always include, but lightly deduped + capped to keep prompt tight.
+    const persona = KB_CACHE.filter(e => e?.source === 'persona').slice(0, 8);
+
+    // Patterns: include the few that actually match the user message (greeting, etc.).
+    const patterns = [...scores.entries()]
+      .filter(([idx]) => KB_CACHE[idx]?.source === 'pattern')
+      .sort((a,b) => b[1]-a[1])
+      .slice(0, 2)
+      .map(([idx]) => KB_CACHE[idx]);
+
+    // Facts: real-world / wikipedia entries, with a minimum-relevance gate so
+    // we don't poison the prompt with off-topic chunks.
+    const factEntries = [...scores.entries()]
+      .filter(([idx]) => {
+        const e = KB_CACHE[idx];
+        return e && e.source !== 'persona' && e.source !== 'pattern';
+      })
+      .sort((a,b) => b[1]-a[1]);
+    if (!factEntries.length) return { persona, facts:[], patterns };
+    const topScore = factEntries[0][1];
+    const minScore = Math.max(1.0, topScore * 0.45); // keep only strong matches
+    const facts = factEntries
+      .filter(([, sc]) => sc >= minScore)
+      .slice(0, k)
+      .map(([idx]) => KB_CACHE[idx]);
+    return { persona, facts, patterns };
+  }
+
+  function fmtBytes(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+    if (n < 1024**3) return (n/1024/1024).toFixed(1) + ' MB';
+    return (n/1024/1024/1024).toFixed(2) + ' GB';
+  }
+
+  let refreshScheduled = false;
+  function refreshUsageUI() {
+    if (refreshScheduled) return;
+    refreshScheduled = true;
+    requestAnimationFrame(() => {
+      refreshScheduled = false;
+      const used = db.bytesUsed;
+      const pct = Math.min(100, (used / APP_CAP_BYTES) * 100);
+      usageBar.firstElementChild.style.width = pct.toFixed(2) + '%';
+      usageBar.classList.toggle('warn', pct > 70 && pct < 95);
+      usageBar.classList.toggle('full', pct >= 95);
+      const line = `${fmtBytes(used)} used (${pct.toFixed(1)}% of 5 GB cap)`;
+      usageText.textContent = line; memStatusInline.textContent = line;
+      kbInfo.innerHTML = `Knowledge base: <b>${db.kbCount}</b> entries in IndexedDB ` +
+        `<span class="kb-tag">persona</span><span class="kb-tag">world</span>` +
+        `<span class="kb-tag">patterns</span><span class="kb-tag">wikipedia</span>`;
+    });
+  }
+
+  async function ensureKnowledgeSeeded(forceReseed = false) {
+    const installed = await db.getKV('kb_version');
+    if (forceReseed || installed !== KB_VERSION) {
+      await db.clearKnowledge();
+      const seeds = SEED_KB.map(e => ({ ...e, ts:Date.now() }));
+      await db.putKnowledgeBulk(seeds);
+      await db.setKV('kb_version', KB_VERSION);
+    }
+    KB_CACHE = await db.allKnowledge();
+    rebuildIndex();
+    // Populate dedupe titles
+    for (const e of KB_CACHE) if (e.source?.startsWith('wikipedia:')) WIKI_TITLES.add(e.source.slice('wikipedia:'.length));
+  }
+
+
+  let availableMB = Infinity;
+  (async () => {
+    try {
+      if (navigator.storage?.estimate) {
+        const { quota = 0, usage = 0 } = await navigator.storage.estimate();
+        availableMB = Math.max(0, (quota - usage) / 1048576);
+        const quotaGB = quota / (1024**3);
+        storageHint.innerHTML =
+          `Browser cache: <b>${availableMB.toFixed(0)} MB</b> available ` +
+          `(quota ${quotaGB.toFixed(2)} GB) · WebGPU ${HAS_WEBGPU?'on':'off'} · ` +
+          `${ORT_THREADS}-thread WASM · <span id="tokRate"></span>`;
+        if (navigator.storage.persist) await navigator.storage.persist().catch(()=>{});
+      } else {
+        storageHint.textContent = 'Storage API unavailable. Cached models may be evicted.';
+      }
+    } catch {}
+    await detectBackend();
+    renderHwChips();
+    await db.init();
+    await ensureKnowledgeSeeded();
+    refreshUsageUI();
+    await restoreMemoryAndChat();
+    buildModelOptions();
+    loadSettings();
+  })();
+
+  function buildModelOptions() {
+    modelSel.innerHTML = '';
+    const byGroup = new Map();
+    for (const m of MODELS) { if (!byGroup.has(m.group)) byGroup.set(m.group, []); byGroup.get(m.group).push(m); }
+    for (const [group, items] of byGroup) {
+      const og = document.createElement('optgroup'); og.label = group;
+      for (const m of items) {
+        const opt = document.createElement('option');
+        const fits = m.mb < availableMB - 100;
+        opt.value = m.id;
+        const sizeStr = m.mb < 1000 ? m.mb + ' MB' : (m.mb/1024).toFixed(1) + ' GB';
+        opt.textContent = `${m.label} — ${sizeStr}${fits?'':' ⚠ low space'}`;
+        og.appendChild(opt);
+      }
+      modelSel.appendChild(og);
+    }
+    const last = (() => { try { return localStorage.getItem('offline-ai-chat:lastModel'); } catch { return null; } })();
+    if (last && MODELS.some(m => m.id === last)) modelSel.value = last;
+    else {
+      const want = ['onnx-community/Qwen3-1.7B-ONNX','onnx-community/Llama-3.2-1B-Instruct',
+                    'onnx-community/Qwen2.5-0.5B-Instruct','HuggingFaceTB/SmolLM2-360M-Instruct'];
+      for (const id of want) { const m = MODELS.find(x => x.id === id); if (m && m.mb < availableMB - 200) { modelSel.value = id; break; } }
+      if (!modelSel.value) modelSel.value = MODELS[0].id;
+    }
+    setStatus('Pick a model and click Load');
+  }
+
+  function setStatus(msg, cls) { statusEl.textContent = msg; dot.className = 'dot' + (cls?' '+cls:''); }
+  function addMsg(role, text = '') {
+    const div = document.createElement('div'); div.className = 'msg ' + role;
+    const b = document.createElement('div'); b.className = 'bubble';
+    const span = document.createElement('span'); span.className = 'txt'; span.textContent = text;
+    b.appendChild(span); div.appendChild(b);
+    if (role === 'bot') {
+      const actions = document.createElement('div'); actions.className = 'row-actions';
+      const cp = document.createElement('button'); cp.textContent = 'Copy'; cp.type='button';
+      cp.onclick = () => { navigator.clipboard?.writeText(span.textContent || '').then(() => { cp.textContent='✓'; setTimeout(()=>cp.textContent='Copy',1200); }); };
+      actions.appendChild(cp);
+      b.appendChild(actions);
+    }
+    chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
+    return new Proxy(b, {
+      set(t, p, v) { if (p==='textContent') { span.textContent = v; return true; } t[p]=v; return true; },
+      get(t, p) { if (p==='textContent') return span.textContent; const v=t[p]; return typeof v==='function' ? v.bind(t) : v; }
+    });
+  }
+
+  quickTiny?.addEventListener('click', () => {
+    const tiny = ['HuggingFaceTB/SmolLM2-135M-Instruct','HuggingFaceTB/SmolLM2-360M-Instruct',
+                  'onnx-community/LFM2-350M-ONNX','onnx-community/Qwen2.5-0.5B-Instruct'];
+    for (const id of tiny) { const m = MODELS.find(x => x.id === id); if (m && m.mb < availableMB - 50) { modelSel.value = id; break; } }
+    loadBtn?.click();
+  });
+
+
+  let tokenizer = null, model = null, TextStreamer = null, Tensor = null;
+  let StoppingCriteriaList = null, InterruptableStoppingCriteria = null, stopCriteria = null;
+  let busy = false;
+  const HISTORY_TURNS = 4;
+  const uiMessages = [];
+  let lastUserMessage = '';
+
+  const GEN = { temperature:0.3, top_p:0.9, top_k:20, max_new_tokens:200, repetition_penalty:1.15 };
+  function loadSettings() {
+    try {
+      const s = JSON.parse(localStorage.getItem('ai:gen')||'{}');
+      Object.assign(GEN, s);
+      gTemp.value = GEN.temperature; gTopP.value = GEN.top_p;
+      gMaxTok.value = GEN.max_new_tokens; gRep.value = GEN.repetition_penalty;
+      gTempVal.textContent = (+GEN.temperature).toFixed(2);
+      gTopPVal.textContent = (+GEN.top_p).toFixed(2);
+      const cap = +(localStorage.getItem('ai:kbCap')||8000);
+      kbCap.value = cap; kbCapVal.textContent = cap;
+    } catch {}
+  }
+  function saveSettings() {
+    try { localStorage.setItem('ai:gen', JSON.stringify(GEN)); } catch {}
+  }
+  gTemp.addEventListener('input', () => { GEN.temperature = +gTemp.value; gTempVal.textContent = GEN.temperature.toFixed(2); saveSettings(); });
+  gTopP.addEventListener('input', () => { GEN.top_p = +gTopP.value; gTopPVal.textContent = GEN.top_p.toFixed(2); saveSettings(); });
+  gMaxTok.addEventListener('change', () => { GEN.max_new_tokens = Math.max(32, Math.min(4096, +gMaxTok.value||200)); saveSettings(); });
+  gRep.addEventListener('change', () => { GEN.repetition_penalty = Math.max(1, +gRep.value||1.15); saveSettings(); });
+  kbCap.addEventListener('input', () => { kbCapVal.textContent = kbCap.value; try{localStorage.setItem('ai:kbCap', kbCap.value);}catch{} });
+
+  function buildSystemPrompt(userText) {
+    const { persona, facts, patterns } = retrieveContext(userText, 4);
+    const parts = [];
+    parts.push('You are Ada, a warm, plainspoken, knowledgeable assistant.');
+    parts.push('');
+    parts.push('# Style');
+    for (const p of persona) parts.push('- ' + p.text);
+    if (patterns.length) {
+      parts.push('');
+      parts.push('# Response pattern hints');
+      for (const p of patterns) parts.push('- ' + p.text);
+    }
+    if (facts.length) {
+      parts.push('');
+      parts.push('# Relevant background facts (use silently, do not cite, ignore any that are off-topic)');
+      for (const f of facts) parts.push('- ' + f.text);
+    }
+    parts.push('');
+    parts.push('# Hard rules');
+    parts.push("- Answer ONLY the user's latest message. Never write a follow-up user turn or roleplay both sides.");
+    parts.push('- Be direct and concrete. No filler like "Certainly!", "As an AI…", "I hope this helps!".');
+    parts.push('- If you do not know, say so plainly instead of guessing. Never invent facts, names, numbers, URLs, or citations.');
+    parts.push('- Default length: 1–4 sentences. Expand only when the user asks for depth or a tutorial.');
+    return parts.join('\n');
+  }
+  function buildMessages(userText) {
+    const recent = uiMessages.slice(-HISTORY_TURNS * 2);
+    return [
+      { role:'system', content:buildSystemPrompt(userText) },
+      ...recent,
+      { role:'user', content:userText },
+    ];
+  }
+
+  async function restoreMemoryAndChat() {
+    try {
+      const prior = await db.lastMessages(HISTORY_TURNS * 2);
+      for (const m of prior) if (m.role==='user' || m.role==='assistant') {
+        uiMessages.push({ role:m.role, content:m.content });
+        addMsg(m.role==='user'?'user':'bot', m.content);
+      }
+      if (prior.length) addMsg('sys', `Restored ${prior.length} prior messages.`);
+    } catch {}
+  }
+
+  kbReseed.addEventListener('click', async () => {
+    kbReseed.disabled = true; kbReseed.textContent = 'Re-seeding…';
+    await ensureKnowledgeSeeded(true); refreshUsageUI();
+    kbReseed.textContent = 'Re-seeded ✓'; setTimeout(() => { kbReseed.textContent='Re-seed persona'; kbReseed.disabled=false; }, 1200);
+  });
+
+
+  const WIKI_BATCH = 3;
+  const WIKI_INTERVAL_MS = 20000;
+  const WIKI_MAX_CHARS_PER_ENTRY = 1800;
+  let wikiPaused = false;
+  let wikiTimer = null;
+  const wikiStats = { ok:0, fail:0, bytes:0, lastTitle:'', skipped:0 };
+
+  function chunkText(text, source, title) {
+    const cleaned = (text||'').replace(/\s+/g, ' ').trim();
+    if (cleaned.length < 80) return [];
+    const out = [];
+    for (let i = 0; i < cleaned.length; i += WIKI_MAX_CHARS_PER_ENTRY) {
+      const piece = cleaned.slice(i, i + WIKI_MAX_CHARS_PER_ENTRY);
+      const tags = Array.from(new Set(((title||'') + ' ' + piece).toLowerCase().match(/[a-z]{4,}/g) || [])).slice(0, 12);
+      out.push({ source, tags, text:(title?title+' — ':'') + piece });
+    }
+    return out;
+  }
+
+  async function wikiRandomTitles(n) {
+    const url = `https://en.wikipedia.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=${encodeURIComponent(n)}&format=json&origin=*`;
+    const r = await fetch(url); if (!r.ok) throw new Error('HTTP '+r.status);
+    const j = await r.json();
+    return (j.query?.random || []).map(x => x.title);
+  }
+  async function wikiSummary(title) {
+    const url = 'https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title.replace(/ /g,'_'));
+    const r = await fetch(url, { headers:{ 'Accept':'application/json' } });
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    const j = await r.json();
+    return { title: j.title || title, extract: j.extract || '' };
+  }
+
+  // Enforce KB cap by evicting oldest wikipedia entries.
+  async function enforceKbCap() {
+    const cap = +kbCap.value || 8000;
+    if (db.kbCount <= cap) return;
+    const overflow = db.kbCount - cap;
+    // Find oldest wikipedia entries from KB_CACHE
+    const wiki = KB_CACHE
+      .map((e, idx) => e && e.source?.startsWith('wikipedia:') ? { e, idx } : null)
+      .filter(Boolean)
+      .sort((a,b) => (a.e.ts||0) - (b.e.ts||0))
+      .slice(0, overflow);
+    if (!wiki.length) return;
+    const ids = wiki.map(x => x.e.id).filter(Boolean);
+    await db.deleteKnowledgeIds(ids);
+    for (const { e, idx } of wiki) {
+      indexRemove(e, idx);
+      if (e.source) WIKI_TITLES.delete(e.source.slice('wikipedia:'.length));
+      KB_CACHE[idx] = null;
+    }
+  }
+
+  async function ingestWikiBatch(n = WIKI_BATCH) {
+    if (!navigator.onLine) throw new Error('offline');
+    const userTitles = (wikiTopics.value||'').split(/\n+/).map(s => s.trim()).filter(Boolean);
+    let titles;
+    if (userTitles.length) {
+      titles = []; for (let i = 0; i < n; i++) titles.push(userTitles[(Math.random()*userTitles.length)|0]);
+    } else {
+      titles = await wikiRandomTitles(n);
+    }
+    const newChunks = [];
+    for (const t of titles) {
+      if (WIKI_TITLES.has(t)) { wikiStats.skipped++; continue; }
+      try {
+        const { title, extract } = await wikiSummary(t);
+        if (!extract) { wikiStats.fail++; continue; }
+        if (WIKI_TITLES.has(title)) { wikiStats.skipped++; continue; }
+        const chunks = chunkText(extract, 'wikipedia:' + title, title).map(c => ({ ...c, ts:Date.now() }));
+        if (chunks.length) {
+          newChunks.push(...chunks);
+          WIKI_TITLES.add(title);
+          wikiStats.ok++; wikiStats.bytes += extract.length; wikiStats.lastTitle = title;
+        }
+      } catch { wikiStats.fail++; }
+    }
+    if (newChunks.length) {
+      await db.putKnowledgeBulk(newChunks);
+      const base = KB_CACHE.length;
+      for (let i = 0; i < newChunks.length; i++) {
+        KB_CACHE.push(newChunks[i]);
+        indexAdd(newChunks[i], base + i);
+      }
+      await enforceKbCap();
+    }
+    refreshUsageUI(); updateWikiStatus();
+    return newChunks.length;
+  }
+
+  function updateWikiStatus() {
+    const pct = (db.bytesUsed / APP_CAP_BYTES) * 100;
+    const autoOff = pct >= 85;
+    const state = !navigator.onLine ? 'offline (paused)'
+                 : autoOff             ? 'paused (storage > 85%)'
+                 : wikiPaused          ? 'paused'
+                 : document.hidden      ? 'paused (tab hidden)'
+                 : 'streaming';
+    wikiStatus.textContent =
+      `Wikipedia auto-feed: ${state} · ${wikiStats.ok} ingested · ${wikiStats.skipped} dupes skipped · ` +
+      `${wikiStats.fail} failed · ${(wikiStats.bytes/1024).toFixed(0)} KB pulled` +
+      (wikiStats.lastTitle ? ` · last: "${wikiStats.lastTitle}"` : '');
+  }
+
+  const idle = (cb, timeout = 4000) =>
+    (window.requestIdleCallback || ((c) => setTimeout(() => c({ timeRemaining:()=>0 }), 1)))(cb, { timeout });
+
+  function scheduleWikiTick() {
+    if (wikiTimer) clearTimeout(wikiTimer);
+    wikiTimer = setTimeout(() => {
+      idle(async () => {
+        const pct = (db.bytesUsed / APP_CAP_BYTES) * 100;
+        if (!wikiPaused && navigator.onLine && !busy && !document.hidden && pct < 85) {
+          try { await ingestWikiBatch(); } catch {}
+        } else updateWikiStatus();
+        scheduleWikiTick();
+      });
+    }, WIKI_INTERVAL_MS);
+  }
+
+  wikiToggle.addEventListener('click', () => {
+    wikiPaused = !wikiPaused;
+    wikiToggle.textContent = wikiPaused ? 'Resume auto-feed' : 'Pause auto-feed';
+    updateWikiStatus();
+  });
+  wikiNow.addEventListener('click', async () => {
+    wikiNow.disabled = true; const orig = wikiNow.textContent; wikiNow.textContent = 'Fetching…';
+    try { await ingestWikiBatch(25); } catch (e) { console.warn(e); }
+    wikiNow.textContent = orig; wikiNow.disabled = false;
+  });
+  ingestBtn.addEventListener('click', async () => {
+    const t = ingestTopic.value.trim(); if (!t) return;
+    ingestBtn.disabled = true; const orig = ingestBtn.textContent; ingestBtn.textContent = 'Fetching…';
+    try {
+      if (WIKI_TITLES.has(t)) { wikiStats.skipped++; updateWikiStatus(); }
+      else {
+        const { title, extract } = await wikiSummary(t);
+        if (extract) {
+          const chunks = chunkText(extract, 'wikipedia:'+title, title).map(c => ({ ...c, ts:Date.now() }));
+          if (chunks.length) {
+            await db.putKnowledgeBulk(chunks);
+            const base = KB_CACHE.length;
+            for (let i = 0; i < chunks.length; i++) { KB_CACHE.push(chunks[i]); indexAdd(chunks[i], base + i); }
+            WIKI_TITLES.add(title);
+            wikiStats.ok++; wikiStats.bytes += extract.length; wikiStats.lastTitle = title;
+            await enforceKbCap();
+            refreshUsageUI(); updateWikiStatus();
+          }
+        }
+      }
+      ingestTopic.value = '';
+    } catch (e) { alert('Ingest failed: ' + e.message); }
+    ingestBtn.textContent = orig; ingestBtn.disabled = false;
+  });
+  ingestTopic.addEventListener('keydown', e => { if (e.key==='Enter') ingestBtn.click(); });
+
+  window.addEventListener('online', updateWikiStatus);
+  window.addEventListener('offline', updateWikiStatus);
+  document.addEventListener('visibilitychange', updateWikiStatus);
+  setTimeout(() => { updateWikiStatus(); scheduleWikiTick(); }, 10000);
+
+  memClear.addEventListener('click', async () => {
+    if (!confirm('Delete all chat history, memory, and the local knowledge base? (Cached model weights are kept.)')) return;
+    await db.clearAll();
+    uiMessages.length = 0; WIKI_TITLES.clear();
+    chat.querySelectorAll('.msg:not(.sys)').forEach(el => el.remove());
+    await ensureKnowledgeSeeded(true);
+    refreshUsageUI();
+  });
+
+  // =========================================================================
+  // KB search (uses the inverted index)
+  // =========================================================================
+  function kbSearchRun() {
+    const q = kbSearch.value.trim(); kbResults.innerHTML = '';
+    if (!q) return;
+    const toks = tokenize(q); const scores = new Map();
+    for (const t of toks) { const s = INDEX.get(t); if (!s) continue; for (const idx of s) scores.set(idx, (scores.get(idx)||0)+1); }
+    const top = [...scores.entries()].sort((a,b) => b[1]-a[1]).slice(0, 10);
+    if (!top.length) { kbResults.innerHTML = '<div class="meta">No matches in your local KB.</div>'; return; }
+    for (const [idx] of top) {
+      const e = KB_CACHE[idx]; if (!e) continue;
+      const div = document.createElement('div'); div.className = 'kb-result';
+      div.innerHTML = `<div class="src">${e.source||''}</div>${e.text.slice(0, 400).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}`;
+      kbResults.appendChild(div);
+    }
+  }
+  kbSearchBtn.addEventListener('click', kbSearchRun);
+  kbSearch.addEventListener('keydown', e => { if (e.key==='Enter') kbSearchRun(); });
+
+  // =========================================================================
+  // Export
+  // =========================================================================
+  function download(filename, text, mime='text/plain') {
+    const blob = new Blob([text], { type: mime });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 500);
+  }
+  exportJson.addEventListener('click', () => download('chat.json', JSON.stringify(uiMessages, null, 2), 'application/json'));
+  exportMd.addEventListener('click', () => {
+    const md = uiMessages.map(m => `**${m.role}**\n\n${m.content}\n`).join('\n---\n');
+    download('chat.md', md, 'text/markdown');
+  });
+
+  // =========================================================================
+  // Load model
+  // =========================================================================
+  loadBtn.addEventListener('click', async () => {
+    loadBtn.disabled = true; modelSel.disabled = true;
+    const modelId = modelSel.value;
+    const meta = MODELS.find(m => m.id === modelId);
+    if (meta && meta.mb > availableMB - 50) {
+      if (!confirm(`This model needs ~${meta.mb} MB but only ${availableMB.toFixed(0)} MB is available. Continue?`)) {
+        loadBtn.disabled = false; modelSel.disabled = false; return;
+      }
+    }
+    setStatus('Loading transformers.js…');
+    try {
+      const tjs = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0');
+      const { AutoTokenizer, AutoModelForCausalLM, TextStreamer: TS, env } = tjs;
+      Tensor = tjs.Tensor || (tjs.utils && tjs.utils.Tensor) || (tjs.default && tjs.default.Tensor);
+      if (!Tensor) throw new Error('transformers.js Tensor class not found');
+      TextStreamer = TS;
+      StoppingCriteriaList = tjs.StoppingCriteriaList;
+      InterruptableStoppingCriteria = tjs.InterruptableStoppingCriteria;
+      env.allowLocalModels = false; env.useBrowserCache = true;
+      try {
+        const ortWasm = env?.backends?.onnx?.wasm;
+        if (ortWasm) { ortWasm.numThreads = ORT_THREADS; ortWasm.simd = true; ortWasm.proxy = ORT_THREADS > 1; }
+      } catch (e) { console.warn('ORT tuning failed', e); }
+
+      if (typeof globalThis.Float16Array === 'undefined') {
+        class Float16ArrayShim extends Uint16Array {}
+        Object.defineProperty(Float16ArrayShim, 'name', { value:'Float16Array' });
+        globalThis.Float16Array = Float16ArrayShim;
+      }
+
+      const { device: detectedBackend, f16: gpuHasF16 } = await detectBackend();
+      const nativeF16 = HAS_FLOAT16 && globalThis.Float16Array.toString().includes('[native code]');
+      const backend = nativeF16 ? detectedBackend : 'wasm';
+
+      const candidates = [];
+      if (backend === 'webgpu' && gpuHasF16 && nativeF16) candidates.push('q4f16','q4','q8','fp32');
+      else if (nativeF16) candidates.push('q4','q8','fp32');
+      else candidates.push('fp32','q8','q4');
+
+      const progressCb = (p) => {
+        if (p.status === 'progress' && p.total) {
+          const pct = (p.loaded / p.total) * 100;
+          bar.style.width = pct.toFixed(1) + '%';
+          setStatus(`Downloading ${p.file} — ${(p.loaded/1048576).toFixed(1)} / ${(p.total/1048576).toFixed(1)} MB`);
+        }
+      };
+      tokenizer = await AutoTokenizer.from_pretrained(modelId, { progress_callback: progressCb });
+
+      let lastErr = null, chosenDtype = null;
+      for (const dtype of candidates) {
+        try {
+          setStatus(`Loading ${modelId.split('/').pop()} (${dtype}, ${backend.toUpperCase()})…`);
+          bar.style.width = '0%';
+          model = await AutoModelForCausalLM.from_pretrained(modelId, { dtype, device:backend, progress_callback:progressCb });
+          chosenDtype = dtype; break;
+        } catch (err) {
+          lastErr = err;
+          const m = String(err?.message||err).toLowerCase();
+          if (!m.includes('float16') && !m.includes('dtype') && !m.includes('unsupported')) throw err;
+        }
+      }
+      if (!chosenDtype) throw lastErr || new Error('All dtypes failed to load');
+
+      bar.style.width = '100%';
+      setStatus(`Ready — ${backend.toUpperCase()} / ${chosenDtype} — offline`, 'ready');
+      try { localStorage.setItem('offline-ai-chat:lastModel', modelId); } catch {}
+      loadBtn.remove();
+      input.disabled = false; sendBtn.disabled = false;
+      input.placeholder = 'Ask me anything…'; input.focus();
+    } catch (e) {
+      console.error(e); setStatus('Failed: ' + e.message, 'err');
+      loadBtn.disabled = false; modelSel.disabled = false;
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    uiMessages.length = 0;
+    chat.querySelectorAll('.msg:not(.sys)').forEach(el => el.remove());
+    input.focus();
+  });
+
+
+  // =========================================================================
+  // Online mode (free, no key) — uses pollinations.ai OpenAI-compatible API
+  // =========================================================================
+  let onlineMode = false;
+  let onlineAbort = null;
+  const onlineToggle = document.getElementById('onlineToggle');
+  try { onlineMode = localStorage.getItem('offline-ai-chat:online') === '1'; } catch {}
+  if (onlineToggle) {
+    onlineToggle.checked = onlineMode;
+    const applyOnline = () => {
+      if (onlineMode) {
+        input.disabled = false; sendBtn.disabled = false;
+        input.placeholder = 'Ask me anything (online)…';
+        setStatus('Online mode — using free cloud model', 'ready');
+      } else if (!model) {
+        input.disabled = true; sendBtn.disabled = true;
+        input.placeholder = 'Load a model first…';
+      } else {
+        input.placeholder = 'Ask me anything…';
+      }
+    };
+    onlineToggle.addEventListener('change', () => {
+      onlineMode = onlineToggle.checked;
+      try { localStorage.setItem('offline-ai-chat:online', onlineMode ? '1' : '0'); } catch {}
+      applyOnline();
+    });
+    applyOnline();
+  }
+
+  async function generateOnline(userText, bubble) {
+    const messages = buildMessages(userText);
+    onlineAbort = new AbortController();
+    const resp = await fetch('https://text.pollinations.ai/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages, model: 'openai-fast', stream: true, private: true, referrer: 'offline-ai-chat' }),
+      signal: onlineAbort.signal,
+    });
+    if (!resp.ok || !resp.body) throw new Error('Online API error ' + resp.status);
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let acc = '', buf = '', tokCount = 0;
+    const t0 = performance.now();
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, idx).trim();
+        buf = buf.slice(idx + 1);
+        if (!line.startsWith('data:')) continue;
+        const data = line.slice(5).trim();
+        if (data === '[DONE]') { buf = ''; break; }
+        try {
+          const j = JSON.parse(data);
+          const delta = j.choices?.[0]?.delta?.content || j.choices?.[0]?.message?.content || '';
+          if (delta) {
+            acc += delta; tokCount++;
+            bubble.textContent = acc; chat.scrollTop = chat.scrollHeight;
+            const dt = (performance.now() - t0) / 1000;
+            if (dt > 0.1 && tokRateEl) tokRateEl.textContent = `· ${(tokCount/dt).toFixed(1)} tok/s (online)`;
+          }
+        } catch {}
+      }
+    }
+    return acc.trim() || '(no response)';
+  }
+
+  // =========================================================================
+  // Send / generate (with stop + tok/s)
+  // =========================================================================
+  async function generate(userText, bubble) {
+    let messages = buildMessages(userText);
+    let encoded = tokenizer.apply_chat_template(messages, { add_generation_prompt:true, return_dict:true });
+    const MAX_CTX = 1024;
+    while (encoded.input_ids.dims[encoded.input_ids.dims.length-1] > MAX_CTX && messages.length > 2) {
+      // drop oldest non-system message
+      const idx = messages.findIndex(m => m.role !== 'system');
+      if (idx < 0) break;
+      messages.splice(idx, 1);
+      encoded = tokenizer.apply_chat_template(messages, { add_generation_prompt:true, return_dict:true });
+    }
+    const input_ids = encoded.input_ids;
+    let attention_mask = encoded.attention_mask;
+    const seqLen = input_ids.dims[input_ids.dims.length - 1];
+    const batch = input_ids.dims.length > 1 ? input_ids.dims[0] : 1;
+    if (!attention_mask) {
+      const amData = new BigInt64Array(batch * seqLen).fill(1n);
+      attention_mask = new Tensor('int64', amData, [batch, seqLen]);
+    }
+    const posData = new BigInt64Array(batch * seqLen);
+    for (let b = 0; b < batch; b++) for (let i = 0; i < seqLen; i++) posData[b*seqLen + i] = BigInt(i);
+    const position_ids = new Tensor('int64', posData, [batch, seqLen]);
+
+    let acc = ''; let tokCount = 0; const t0 = performance.now();
+    const streamer = new TextStreamer(tokenizer, {
+      skip_prompt:true, skip_special_tokens:true,
+      callback_function:(chunk) => {
+        acc += chunk; tokCount++;
+        const cut = acc.search(/\n(?:user|assistant|system)\s*[:\n]/i);
+        const shown = cut >= 0 ? acc.slice(0, cut) : acc;
+        bubble.textContent = shown; chat.scrollTop = chat.scrollHeight;
+        const dt = (performance.now() - t0) / 1000;
+        if (dt > 0.1 && tokRateEl) tokRateEl.textContent = `· ${(tokCount/dt).toFixed(1)} tok/s`;
+      },
+    });
+
+    stopCriteria = InterruptableStoppingCriteria ? new InterruptableStoppingCriteria() : null;
+    const stopping_criteria = stopCriteria && StoppingCriteriaList
+      ? new StoppingCriteriaList([stopCriteria]) : undefined;
+
+    await model.generate({
+      input_ids, attention_mask, position_ids,
+      max_new_tokens: GEN.max_new_tokens, do_sample: GEN.temperature > 0,
+      temperature: GEN.temperature, top_p: GEN.top_p, top_k: GEN.top_k,
+      repetition_penalty: GEN.repetition_penalty,
+      streamer, stopping_criteria,
+    });
+
+    let reply = acc.trim();
+    const cut = reply.search(/\n(?:user|assistant|system)\s*[:\n]/i);
+    if (cut >= 0) reply = reply.slice(0, cut).trim();
+    return reply || '(no response)';
+  }
+
+  async function send(userTextOverride) {
+    if (busy) return;
+    if (!onlineMode && !model) return;
+    let text = (userTextOverride ?? input.value).trim(); if (!text) return; if (text.length > 8000) text = text.slice(0, 8000);
+    if (!userTextOverride) { input.value = ''; input.style.height = 'auto'; }
+    addMsg('user', text);
+    uiMessages.push({ role:'user', content:text });
+    lastUserMessage = text;
+    db.addMessage({ role:'user', content:text, model:modelSel.value }).then(refreshUsageUI).catch(console.warn);
+
+    busy = true; sendBtn.disabled = true; input.disabled = true; stopBtn.style.display = '';
+    const bubble = addMsg('bot', ''); bubble.classList.add('cursor');
+    try {
+      const reply = await (onlineMode ? generateOnline(text, bubble) : generate(text, bubble));
+      bubble.textContent = reply;
+      uiMessages.push({ role:'assistant', content:reply });
+      db.addMessage({ role:'assistant', content:reply, model:modelSel.value }).then(refreshUsageUI).catch(console.warn);
+    } catch (e) { console.error(e); bubble.textContent = 'Error: ' + e.message; }
+    finally {
+      bubble.classList.remove('cursor');
+      busy = false; sendBtn.disabled = false; input.disabled = false; stopBtn.style.display = 'none';
+      stopCriteria = null; input.focus();
+    }
+  }
+
+  stopBtn.addEventListener('click', () => { try { stopCriteria?.interrupt?.(); } catch {} try { onlineAbort?.abort?.(); } catch {} });
+
+  regenBtn.addEventListener('click', async () => {
+    if (busy || (!model && !onlineMode) || !lastUserMessage) return;
+    // Remove the last assistant message from UI + state
+    for (let i = uiMessages.length - 1; i >= 0; i--) {
+      if (uiMessages[i].role === 'assistant') { uiMessages.splice(i, 1); break; }
+    }
+    const bots = chat.querySelectorAll('.msg.bot');
+    if (bots.length) bots[bots.length - 1].remove();
+    // Also remove the last user message from uiMessages so send() doesn't duplicate
+    for (let i = uiMessages.length - 1; i >= 0; i--) {
+      if (uiMessages[i].role === 'user') { uiMessages.splice(i, 1); break; }
+    }
+    const users = chat.querySelectorAll('.msg.user');
+    if (users.length) users[users.length - 1].remove();
+    await send(lastUserMessage);
+  });
+
+  sendBtn.addEventListener('click', () => send());
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(160, input.scrollHeight) + 'px';
+  });
+
+  // Periodically resync byte usage with the real quota so the bar doesn't drift.
+  setInterval(() => db.refreshBytesFromQuota().then(refreshUsageUI), 30000);
+</script>
+</body>
+</html>
