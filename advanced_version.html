@@ -1,0 +1,1640 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Offline AI Chat — Wikipedia · Britannica · BBC News</title>
+<style>
+  /* ================= Ocean Glassmorphic Theme ================= */
+  :root {
+    --bg:#02060f; --bg-2:#03142b; --bg-3:#062a52;
+    --panel:rgba(13,38,73,.45); --panel-2:rgba(20,55,100,.35); --panel-solid:#0a1f3d;
+    --border:rgba(120,190,255,.18); --border-strong:rgba(140,210,255,.35);
+    --text:#eaf4ff; --muted:#9bb6d6; --muted-2:#6a86a8;
+    --user:#2f8bff; --user-2:#1463d6; --bot:rgba(255,255,255,.06);
+    --accent:#38e0d4; --accent-2:#06b6d4; --warn:#fbbf24; --err:#ef4444;
+    --radius:16px;
+    --shadow:0 12px 40px -10px rgba(0,50,120,.55), 0 2px 8px rgba(0,0,0,.25);
+    --glass-blur:saturate(160%) blur(18px);
+  }
+  html[data-theme="light"]{
+    --bg:#d9efff; --bg-2:#aedbff; --bg-3:#7cc4ff;
+    --panel:rgba(255,255,255,.55); --panel-2:rgba(255,255,255,.4); --panel-solid:#fff;
+    --border:rgba(30,100,170,.2); --border-strong:rgba(30,100,170,.4);
+    --text:#052036; --muted:#3d6790; --muted-2:#7898b8; --bot:rgba(255,255,255,.7);
+    --shadow:0 12px 40px -10px rgba(20,80,160,.25);
+  }
+  @media (prefers-color-scheme: light){
+    html[data-theme="auto"]{
+      --bg:#d9efff; --bg-2:#aedbff; --bg-3:#7cc4ff;
+      --panel:rgba(255,255,255,.55); --panel-2:rgba(255,255,255,.4); --panel-solid:#fff;
+      --border:rgba(30,100,170,.2); --border-strong:rgba(30,100,170,.4);
+      --text:#052036; --muted:#3d6790; --muted-2:#7898b8; --bot:rgba(255,255,255,.7);
+      --shadow:0 12px 40px -10px rgba(20,80,160,.25);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:
+      radial-gradient(1400px 700px at 15% -10%, rgba(56,224,212,.18), transparent 60%),
+      radial-gradient(1200px 600px at 90% 10%, rgba(47,139,255,.22), transparent 65%),
+      radial-gradient(900px 500px at 50% 110%, rgba(6,182,212,.18), transparent 60%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+    background-attachment:fixed;
+    color:var(--text);
+    font:15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  .app{display:grid; grid-template-columns:260px 1fr; height:100vh;}
+  @media (max-width:760px){ .app{grid-template-columns:1fr;} .sidebar{position:fixed;left:-280px;top:0;bottom:0;width:260px;z-index:50;transition:left .25s;} .sidebar.open{left:0;} }
+
+  /* Sidebar */
+  .sidebar{
+    background:var(--panel); -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+    border-right:1px solid var(--border); display:flex; flex-direction:column; min-height:0;
+  }
+  .sidebar header{padding:14px; border-bottom:1px solid var(--border); display:flex; gap:8px; align-items:center;}
+  .sidebar h2{font-size:13px; margin:0; color:var(--muted); font-weight:600; letter-spacing:.5px; text-transform:uppercase; flex:1;}
+  .sidebar .chats{flex:1; overflow-y:auto; padding:8px;}
+  .chat-item{
+    display:flex; align-items:center; gap:6px; padding:9px 11px; border-radius:10px; cursor:pointer;
+    color:var(--text); font-size:13.5px; border:1px solid transparent; margin-bottom:3px;
+    transition:background .15s, border-color .15s;
+  }
+  .chat-item:hover{background:var(--panel-2); border-color:var(--border);}
+  .chat-item.active{background:var(--panel-2); border-color:var(--border-strong); box-shadow:0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent) inset;}
+  .chat-item .title{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .chat-item .del{opacity:0; background:transparent; border:0; color:var(--muted); cursor:pointer; font-size:14px; padding:2px 4px; border-radius:6px;}
+  .chat-item:hover .del{opacity:1;}
+  .chat-item .del:hover{color:var(--err); background:rgba(239,68,68,.1);}
+  .new-chat{margin:8px; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:600; font-size:13px;
+    background:linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); color:#042027; border:0;
+    box-shadow:0 6px 16px -6px rgba(56,224,212,.55), inset 0 1px 0 rgba(255,255,255,.4);}
+  .new-chat:hover{filter:brightness(1.08);}
+  .sidebar-footer{padding:10px 14px; border-top:1px solid var(--border); font-size:11px; color:var(--muted-2);}
+
+  /* Main column */
+  .main-col{display:flex; flex-direction:column; min-width:0; min-height:0;}
+  header.top{
+    padding:10px 16px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:var(--panel); -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+    position:sticky; top:0; z-index:10;
+  }
+  header.top h1{
+    font-size:16px; margin:0; font-weight:700; letter-spacing:.3px;
+    background:linear-gradient(135deg,#eaf4ff 0%,#7dd3fc 50%,#38e0d4 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    background-size:200% 200%; animation:shimmer 6s ease-in-out infinite;
+  }
+  @keyframes shimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+  .status{font-size:12px; color:var(--muted);}
+  .dot{
+    width:10px; height:10px; border-radius:50%; background:var(--warn);
+    box-shadow:0 0 0 4px color-mix(in oklab,var(--warn) 20%,transparent), 0 0 12px var(--warn);
+    animation:pulse-dot 2s ease-in-out infinite;
+  }
+  .dot.ready{background:var(--accent); box-shadow:0 0 0 4px color-mix(in oklab,var(--accent) 25%,transparent), 0 0 14px var(--accent);}
+  .dot.err{background:var(--err); box-shadow:0 0 0 4px color-mix(in oklab,var(--err) 25%,transparent), 0 0 14px var(--err);}
+  @keyframes pulse-dot{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.15);filter:brightness(1.3)}}
+  .hw-chips{display:flex; gap:6px; flex-wrap:wrap;}
+  .chip{
+    font-size:11px; padding:4px 10px; border-radius:999px;
+    background:var(--panel-2); border:1px solid var(--border); color:var(--muted);
+    display:inline-flex; align-items:center; gap:4px;
+  }
+  .chip.on{color:var(--accent); border-color:color-mix(in oklab,var(--accent) 50%,var(--border));}
+  .chip.off{color:var(--muted-2);}
+
+  /* Messages */
+  main{flex:1; overflow-y:auto; padding:22px 18px 28px; max-width:880px; width:100%; margin:0 auto; scroll-behavior:smooth;}
+  .msg{margin:14px 0; display:flex; animation:rise .4s cubic-bezier(.2,.8,.2,1) both;}
+  @keyframes rise{from{opacity:0; transform:translateY(12px) scale(.98); filter:blur(3px)} to{opacity:1; transform:none; filter:blur(0)}}
+  .msg .bubble{
+    padding:12px 16px; border-radius:var(--radius); max-width:82%;
+    white-space:pre-wrap; word-wrap:break-word; line-height:1.6; position:relative;
+    -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  }
+  .msg.user{justify-content:flex-end;}
+  .msg.user .bubble{
+    background:linear-gradient(135deg,#2f8bff 0%,#1463d6 60%,#0a3a8a 100%);
+    color:white; border-bottom-right-radius:5px;
+    box-shadow:var(--shadow), 0 0 0 1px rgba(120,190,255,.25) inset;
+  }
+  .msg.bot .bubble{
+    background:var(--bot); border:1px solid var(--border); border-bottom-left-radius:5px;
+    box-shadow:0 4px 18px -10px rgba(0,30,80,.5), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .msg.sys .bubble{
+    background:transparent; color:var(--muted); font-size:12.5px; font-style:italic;
+    border:1px dashed var(--border); padding:8px 12px; border-radius:12px;
+  }
+  .msg .row-actions{position:absolute; top:6px; right:6px; display:flex; gap:4px; opacity:0; transition:opacity .2s;}
+  .msg.bot:hover .row-actions{opacity:1;}
+  .row-actions button{background:var(--panel-2); border:1px solid var(--border); color:var(--muted); font-size:11px; padding:3px 7px; border-radius:6px; cursor:pointer;}
+  .row-actions button:hover{color:var(--text); border-color:var(--border-strong);}
+  .cursor::after{content:"▍"; opacity:.8; margin-left:2px; color:var(--accent); animation:blink 1s steps(1) infinite;}
+  @keyframes blink{50%{opacity:0}}
+
+  /* Composer */
+  footer{border-top:1px solid var(--border); padding:12px 14px 16px; background:var(--panel); -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);}
+  .composer{max-width:880px; margin:0 auto; display:flex; gap:10px; align-items:flex-end;}
+  textarea{
+    flex:1; resize:none; min-height:50px; max-height:220px;
+    background:var(--panel-2); color:var(--text);
+    border:1px solid var(--border); border-radius:14px;
+    padding:13px 16px; font:inherit; outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  textarea:focus{border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in oklab,var(--accent) 22%,transparent);}
+  button{
+    background:linear-gradient(135deg,#2f8bff,#1463d6);
+    color:white; border:0; padding:11px 18px; border-radius:14px; cursor:pointer; font-weight:600;
+    transition:transform .12s, box-shadow .2s, filter .15s; font-size:14px;
+    box-shadow:0 6px 18px -6px rgba(47,139,255,.55), inset 0 1px 0 rgba(255,255,255,.18);
+  }
+  button:hover:not(:disabled){filter:brightness(1.08); transform:translateY(-1px);}
+  button:disabled{opacity:.5; cursor:not-allowed; filter:grayscale(.3);}
+  button.secondary{background:var(--panel-2); color:var(--text); border:1px solid var(--border); box-shadow:none;}
+  button.secondary:hover:not(:disabled){background:var(--panel); border-color:var(--border-strong);}
+  button.ghost{background:transparent; color:var(--muted); padding:6px 10px; font-size:12px; font-weight:500; box-shadow:none;}
+  button.ghost:hover:not(:disabled){color:var(--text); background:var(--panel-2);}
+  button.danger{background:linear-gradient(135deg,#ef4444,#b91c1c); box-shadow:0 6px 18px -6px rgba(239,68,68,.5);}
+  button.icon{padding:7px 10px; font-size:16px; line-height:1;}
+
+  .progress{height:3px; background:rgba(255,255,255,.06); overflow:hidden;}
+  .progress>div{height:100%; width:0%; background:linear-gradient(90deg,var(--user),var(--accent),var(--user)); background-size:200% 100%; animation:flow 2s linear infinite; transition:width .3s;}
+  @keyframes flow{0%{background-position:0% 0}100%{background-position:200% 0}}
+
+  .hint{font-size:12px; color:var(--muted); padding:8px 14px 0; max-width:880px; margin:0 auto;}
+  .hint #tokRate{color:var(--accent); font-variant-numeric:tabular-nums;}
+
+  select,input[type=text],input[type=number],input[type=range]{
+    background:var(--panel-2); color:var(--text); border:1px solid var(--border);
+    border-radius:10px; padding:7px 10px; font:inherit; font-size:12.5px;
+  }
+  select:focus,input:focus{border-color:var(--accent); outline:none;}
+  select{max-width:340px;}
+  option,optgroup{background:var(--panel-solid); color:var(--text);}
+
+  /* Modal */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(0,10,25,.7); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    display:none; align-items:center; justify-content:center; z-index:100; padding:20px;
+    animation:fade .2s ease;
+  }
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal-backdrop.open{display:flex;}
+  .modal{
+    background:var(--panel-solid); border:1px solid var(--border-strong); border-radius:18px;
+    max-width:760px; width:100%; max-height:88vh; display:flex; flex-direction:column;
+    box-shadow:0 24px 60px -10px rgba(0,30,80,.7);
+  }
+  .modal-head{padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px;}
+  .modal-head h3{margin:0; font-size:16px; flex:1;}
+  .tabs{display:flex; gap:4px; padding:8px 12px 0; border-bottom:1px solid var(--border);}
+  .tab{padding:9px 16px; cursor:pointer; font-size:13px; color:var(--muted); border:0; background:transparent; border-radius:8px 8px 0 0; font-weight:600;}
+  .tab.active{color:var(--accent); background:var(--panel-2); border-bottom:2px solid var(--accent);}
+  .tab:hover:not(.active){color:var(--text);}
+  .modal-body{padding:18px 20px; overflow-y:auto; flex:1;}
+  .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px;}
+  .row label{font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:6px;}
+  .row .meta{font-size:12px; color:var(--muted); flex:1; min-width:200px;}
+  .meta{font-size:12px; color:var(--muted);}
+  .usage-bar{height:6px; background:rgba(255,255,255,.06); border-radius:4px; overflow:hidden; margin:10px 0;}
+  .usage-bar>div{height:100%; background:linear-gradient(90deg,var(--accent-2),var(--accent)); transition:width .4s; width:0%;}
+  .usage-bar.warn>div{background:linear-gradient(90deg,#fbbf24,#f59e0b);}
+  .usage-bar.full>div{background:linear-gradient(90deg,#ef4444,#b91c1c);}
+  .kb-tag{display:inline-block; font-size:11px; background:var(--panel-2); color:var(--muted); padding:3px 8px; border-radius:7px; margin:2px 4px 0 0; border:1px solid var(--border);}
+  .kb-result{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin:8px 0; font-size:12.5px;}
+  .kb-result .src{color:var(--muted); font-size:11px; margin-bottom:4px;}
+
+  .source-toggles{display:flex; gap:8px; flex-wrap:wrap;}
+  .src-toggle{display:flex; align-items:center; gap:6px; padding:7px 12px; border:1px solid var(--border); border-radius:999px; cursor:pointer; background:var(--panel-2); font-size:12.5px; user-select:none;}
+  .src-toggle input{margin:0;}
+  .src-toggle.on{border-color:var(--accent); color:var(--accent);}
+
+  ::-webkit-scrollbar{width:10px; height:10px;}
+  ::-webkit-scrollbar-thumb{background:linear-gradient(180deg, rgba(47,139,255,.4), rgba(56,224,212,.4)); border-radius:10px; border:2px solid transparent; background-clip:padding-box;}
+  ::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg, rgba(47,139,255,.7), rgba(56,224,212,.7)); background-clip:padding-box;}
+
+  @media (max-width:600px){
+    header.top h1{font-size:14px;}
+    select{max-width:100%; flex:1;}
+    .msg .bubble{max-width:92%;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- =================== SIDEBAR =================== -->
+  <aside class="sidebar" id="sidebar">
+    <header>
+      <h2>Chats</h2>
+      <button class="ghost icon" id="closeSidebar" title="Close" style="display:none;">✕</button>
+    </header>
+    <button class="new-chat" id="newChatBtn">+ New chat</button>
+    <div class="chats" id="chatList"></div>
+    <div class="sidebar-footer">
+      <div id="kbSummary">Knowledge base: —</div>
+      <div id="storageSummary" style="margin-top:4px;">Storage: —</div>
+    </div>
+  </aside>
+
+  <!-- =================== MAIN =================== -->
+  <div class="main-col">
+    <header class="top">
+      <button class="ghost icon" id="openSidebar" title="Chats" style="display:none;">☰</button>
+      <span class="dot" id="dot"></span>
+      <h1>AI Chat</h1>
+      <span class="status" id="status">Loading model list…</span>
+      <span class="hw-chips" id="hwChips"></span>
+      <span style="flex:1"></span>
+      <button id="themeBtn" class="ghost icon" title="Toggle theme">🌗</button>
+      <select id="modelSel"></select>
+      <button id="loadBtn" class="secondary" style="padding:6px 12px; font-size:13px;">Load</button>
+      <label class="chip" title="Use a free cloud model instead of local"><input type="checkbox" id="onlineToggle" style="margin:0 4px 0 0;"> Online</label>
+      <button id="settingsBtn" class="ghost icon" title="Settings">⚙️</button>
+    </header>
+    <div class="progress"><div id="bar"></div></div>
+    <main id="chat">
+      <div class="msg sys"><div class="bubble" id="introMsg">100% in-browser inference — runs <b>fully offline</b> after first download. Grounded with live snippets from <b>Wikipedia</b>, <b>Britannica</b>, and <b>BBC News</b>. Large local knowledge base stored in <b>OPFS</b> for multi-GB capacity. Click <b>⚙️ Settings</b> to configure sources & generation.</div></div>
+    </main>
+    <footer>
+      <div class="composer">
+        <textarea id="input" placeholder="Load a model first…" disabled></textarea>
+        <button id="send" disabled>Send</button>
+        <button id="stop" class="danger" style="display:none;">⏹ Stop</button>
+      </div>
+      <div class="hint" id="storageHint">Checking storage… <span id="tokRate"></span></div>
+    </footer>
+  </div>
+</div>
+
+<!-- =================== SETTINGS MODAL =================== -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>⚙️ Settings</h3>
+      <button class="ghost icon" id="closeSettings" title="Close">✕</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="kb">📚 Local knowledge & auto-feed</button>
+      <button class="tab" data-tab="gen">🎛️ Generation</button>
+    </div>
+    <div class="modal-body">
+      <!-- KB TAB -->
+      <div class="tab-pane" data-pane="kb">
+        <div class="row">
+          <span class="meta">Sources used for the live grounding fed into every reply, and for the background auto-feed.</span>
+        </div>
+        <div class="row source-toggles" id="sourceToggles">
+          <label class="src-toggle on"><input type="checkbox" id="srcWiki" checked> 🌐 Wikipedia</label>
+          <label class="src-toggle on"><input type="checkbox" id="srcBrit" checked> 📖 Britannica</label>
+          <label class="src-toggle on"><input type="checkbox" id="srcBBC" checked> 📰 BBC News</label>
+        </div>
+        <div class="row">
+          <button id="wikiToggle" class="secondary">Pause auto-feed</button>
+          <button id="wikiNow" class="secondary">Fetch 25 now</button>
+          <button id="bbcNow" class="secondary">📰 Pull BBC headlines</button>
+          <button id="kbReseed" class="secondary">Re-seed persona</button>
+          <button id="memClear" class="secondary danger">Clear all data</button>
+        </div>
+        <div class="row">
+          <input type="text" id="ingestTopic" placeholder="Ingest a specific topic (Wikipedia + Britannica)…" style="flex:1; min-width:220px;">
+          <button id="ingestBtn" class="secondary">Ingest topic</button>
+        </div>
+        <div class="row">
+          <input type="text" id="kbSearch" placeholder="Search your local knowledge base…" style="flex:1; min-width:220px;">
+          <button id="kbSearchBtn" class="secondary">Search KB</button>
+        </div>
+        <div id="kbResults"></div>
+        <div class="usage-bar" id="usageBar"><div></div></div>
+        <div class="meta" id="usageText">—</div>
+        <div class="meta" id="kbInfo" style="margin-top:6px;">Knowledge base: —</div>
+        <div class="meta" id="wikiStatus" style="margin-top:4px;">Auto-feed: idle.</div>
+        <div class="row" style="margin-top:14px;">
+          <label>KB cap: <input type="range" id="kbCap" min="500" max="100000" step="500" value="20000" style="width:140px;"> <span id="kbCapVal">20000</span> entries</label>
+          <span class="meta">Oldest external entries are evicted when the cap is reached.</span>
+        </div>
+        <details style="margin-top:8px;">
+          <summary class="meta" style="cursor:pointer;">▸ Seed-topic list (one title per line — optional)</summary>
+          <textarea id="wikiTopics" style="width:100%; min-height:80px; margin-top:6px; background:var(--panel-2); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--text); font:12px/1.4 monospace;" placeholder="Leave blank to pull random articles"></textarea>
+        </details>
+      </div>
+      <!-- GEN TAB -->
+      <div class="tab-pane" data-pane="gen" style="display:none;">
+        <div class="row">
+          <label>Temperature <input type="range" id="gTemp" min="0" max="1.5" step="0.05" value="0.4" style="width:160px;"> <span id="gTempVal">0.40</span></label>
+        </div>
+        <div class="row">
+          <label>Top-p <input type="range" id="gTopP" min="0.1" max="1" step="0.05" value="0.92" style="width:160px;"> <span id="gTopPVal">0.92</span></label>
+        </div>
+        <div class="row">
+          <label>Max tokens <input type="number" id="gMaxTok" min="32" max="4096" step="32" value="320" style="width:90px;"></label>
+          <label>Repetition penalty <input type="number" id="gRep" min="1" max="2" step="0.05" value="1.18" style="width:80px;"></label>
+          <label>Top-k <input type="number" id="gTopK" min="0" max="200" step="1" value="40" style="width:80px;"></label>
+        </div>
+        <div class="row">
+          <label>Context history turns <input type="number" id="gHist" min="1" max="20" step="1" value="6" style="width:80px;"></label>
+          <label>Live grounding snippets <input type="number" id="gLive" min="0" max="8" step="1" value="5" style="width:80px;"></label>
+          <label>KB facts in prompt <input type="number" id="gFacts" min="0" max="20" step="1" value="8" style="width:80px;"></label>
+        </div>
+        <div class="row">
+          <button id="exportJson" class="secondary">Export chat (JSON)</button>
+          <button id="exportMd" class="secondary">Export chat (Markdown)</button>
+          <button id="regenBtn" class="secondary">🔁 Regenerate last</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+"use strict";
+/* ==========================================================================
+   Offline AI Chat — multi-source grounded, OPFS-backed, multi-chat.
+   ========================================================================== */
+const $ = (id) => document.getElementById(id);
+const dot=$('dot'), statusEl=$('status'), bar=$('bar'), chat=$('chat');
+const input=$('input'), sendBtn=$('send'), stopBtn=$('stop');
+const loadBtn=$('loadBtn'), modelSel=$('modelSel');
+const storageHint=$('storageHint'), tokRateEl=$('tokRate');
+const hwChips=$('hwChips'), themeBtn=$('themeBtn');
+const settingsBtn=$('settingsBtn'), closeSettings=$('closeSettings'), settingsModal=$('settingsModal');
+const newChatBtn=$('newChatBtn'), chatList=$('chatList');
+const openSidebar=$('openSidebar'), closeSidebar=$('closeSidebar'), sidebar=$('sidebar');
+const memClear=$('memClear'), kbReseed=$('kbReseed');
+const usageBar=$('usageBar'), usageText=$('usageText'), kbInfo=$('kbInfo');
+const wikiStatus=$('wikiStatus'), wikiToggle=$('wikiToggle'), wikiNow=$('wikiNow'), bbcNow=$('bbcNow');
+const wikiTopics=$('wikiTopics'), ingestTopic=$('ingestTopic'), ingestBtn=$('ingestBtn');
+const kbSearch=$('kbSearch'), kbSearchBtn=$('kbSearchBtn'), kbResults=$('kbResults');
+const kbCap=$('kbCap'), kbCapVal=$('kbCapVal');
+const gTemp=$('gTemp'), gTopP=$('gTopP'), gMaxTok=$('gMaxTok'), gRep=$('gRep'), gTopK=$('gTopK');
+const gHist=$('gHist'), gLive=$('gLive'), gFacts=$('gFacts');
+const gTempVal=$('gTempVal'), gTopPVal=$('gTopPVal');
+const exportJson=$('exportJson'), exportMd=$('exportMd'), regenBtn=$('regenBtn');
+const srcWiki=$('srcWiki'), srcBrit=$('srcBrit'), srcBBC=$('srcBBC');
+const kbSummary=$('kbSummary'), storageSummary=$('storageSummary');
+
+/* ---------- Theme ---------- */
+const THEMES=['auto','dark','light'];
+let theme=(()=>{try{return localStorage.getItem('ai:theme')||'auto'}catch{return 'auto'}})();
+function applyTheme(){document.documentElement.dataset.theme=theme; themeBtn.textContent=theme==='light'?'☀️':theme==='dark'?'🌙':'🌗';}
+themeBtn.addEventListener('click',()=>{theme=THEMES[(THEMES.indexOf(theme)+1)%THEMES.length]; try{localStorage.setItem('ai:theme',theme)}catch{} applyTheme();});
+applyTheme();
+
+/* ---------- Mobile sidebar ---------- */
+function isMobile(){return window.matchMedia('(max-width:760px)').matches;}
+function syncMobileChrome(){
+  const m=isMobile();
+  openSidebar.style.display=m?'':'none';
+  closeSidebar.style.display=m?'':'none';
+}
+syncMobileChrome();
+window.addEventListener('resize', syncMobileChrome);
+openSidebar.addEventListener('click',()=>sidebar.classList.add('open'));
+closeSidebar.addEventListener('click',()=>sidebar.classList.remove('open'));
+
+/* ---------- Settings modal ---------- */
+settingsBtn.addEventListener('click',()=>settingsModal.classList.add('open'));
+closeSettings.addEventListener('click',()=>settingsModal.classList.remove('open'));
+settingsModal.addEventListener('click',(e)=>{if(e.target===settingsModal) settingsModal.classList.remove('open');});
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b===btn));
+    const t=btn.dataset.tab;
+    document.querySelectorAll('.tab-pane').forEach(p=>p.style.display=p.dataset.pane===t?'':'none');
+  });
+});
+
+/* ---------- Hardware ---------- */
+function detectFloat16(){try{if(typeof Float16Array==='undefined')return false; const a=new Float16Array(1); a[0]=1.5; return a[0]===1.5;}catch{return false}}
+const HAS_FLOAT16=detectFloat16();
+const HAS_WEBGPU='gpu'in navigator;
+const HAS_SAB=typeof SharedArrayBuffer!=='undefined';
+const HW_CORES=Math.max(1,navigator.hardwareConcurrency||2);
+const DEV_MEM_GB=navigator.deviceMemory||0;
+const ORT_THREADS=HAS_SAB?Math.min(8,Math.max(1,HW_CORES-1)):1;
+let GPU_INFO=null;
+async function detectBackend(){
+  if(!HAS_WEBGPU) return {device:'wasm', f16:false};
+  try{
+    const adapter=await navigator.gpu.requestAdapter({powerPreference:'high-performance'});
+    if(!adapter) return {device:'wasm', f16:false};
+    const f16=adapter.features?.has?.('shader-f16')??false;
+    try{GPU_INFO=await adapter.requestAdapterInfo?.()}catch{}
+    return {device:'webgpu', f16};
+  }catch{return {device:'wasm', f16:false}}
+}
+function renderHwChips(){
+  const chips=[
+    {label:`${HW_CORES} cores`, on:HW_CORES>=4},
+    {label:DEV_MEM_GB?`${DEV_MEM_GB} GB RAM`:'RAM ?', on:!DEV_MEM_GB||DEV_MEM_GB>=4},
+    {label:HAS_WEBGPU?'WebGPU':'WebGPU off', on:HAS_WEBGPU, off:!HAS_WEBGPU},
+    {label:HAS_SAB?`${ORT_THREADS}-thread WASM`:'1-thread WASM', on:HAS_SAB, off:!HAS_SAB},
+    {label:HAS_FLOAT16?'f16':'f32 only', on:HAS_FLOAT16, off:!HAS_FLOAT16},
+    {label:'OPFS', on:!!navigator.storage?.getDirectory},
+  ];
+  if(GPU_INFO?.vendor) chips.push({label:`${GPU_INFO.vendor}${GPU_INFO.architecture?' · '+GPU_INFO.architecture:''}`, on:true});
+  hwChips.innerHTML=chips.map(c=>`<span class="chip ${c.on?'on':''} ${c.off?'off':''}">${c.label}</span>`).join('');
+}
+
+/* =========================================================================
+   STORAGE: OPFS for KB + chats. IndexedDB only for fallback (legacy migrate).
+   Layout in OPFS:
+     /kb/shard-NNNN.jsonl   (append-only chunks)
+     /kb/meta.json          (counts, sources, KB version)
+     /chats/<id>.json       (full chat: {id,title,createdAt,updatedAt,messages})
+     /chats/index.json      (sorted list of {id,title,updatedAt})
+   ========================================================================= */
+const OPFS_AVAILABLE = !!(navigator.storage && navigator.storage.getDirectory);
+const KB_VERSION=8;
+const SHARD_MAX_ENTRIES=2000;
+let opfsRoot=null, kbDir=null, chatsDir=null;
+
+async function opfsInit(){
+  if(!OPFS_AVAILABLE) return false;
+  opfsRoot = await navigator.storage.getDirectory();
+  kbDir   = await opfsRoot.getDirectoryHandle('kb', {create:true});
+  chatsDir= await opfsRoot.getDirectoryHandle('chats', {create:true});
+  return true;
+}
+async function opfsReadText(dir, name){
+  try{
+    const h=await dir.getFileHandle(name);
+    const f=await h.getFile();
+    return await f.text();
+  }catch{return null;}
+}
+async function opfsWriteText(dir, name, text){
+  const h=await dir.getFileHandle(name, {create:true});
+  const w=await h.createWritable();
+  await w.write(text); await w.close();
+}
+async function opfsAppendText(dir, name, text){
+  const h=await dir.getFileHandle(name, {create:true});
+  const f=await h.getFile();
+  const w=await h.createWritable({keepExistingData:true});
+  await w.seek(f.size); await w.write(text); await w.close();
+}
+async function opfsRemove(dir, name){ try{await dir.removeEntry(name)}catch{} }
+async function opfsList(dir){
+  const out=[]; for await(const [n,h] of dir.entries()) out.push({name:n, handle:h}); return out;
+}
+
+/* ---------- KB store ---------- */
+const KB = {
+  meta:{version:0, count:0, shard:0, lines:0},
+  entries:[],     // in-memory full list (capped); each: {id,source,tags,text,ts,_toks}
+  byId:new Map(),
+  titlesSeen:new Set(),  // dedupe wiki/britannica/bbc titles
+  async load(){
+    if(!OPFS_AVAILABLE) return;
+    const metaTxt = await opfsReadText(kbDir,'meta.json');
+    if(metaTxt){ try{Object.assign(this.meta, JSON.parse(metaTxt))}catch{} }
+    // Read all shards into memory.
+    const items=await opfsList(kbDir);
+    const shardFiles = items.filter(x=>/^shard-\d+\.jsonl$/.test(x.name)).sort((a,b)=>a.name.localeCompare(b.name));
+    let nextId = 1;
+    for(const sh of shardFiles){
+      const f=await sh.handle.getFile();
+      const text=await f.text();
+      const lines=text.split('\n');
+      for(const line of lines){
+        if(!line) continue;
+        try{
+          const e=JSON.parse(line);
+          if(!e || e._deleted) continue;
+          if(!e.id) e.id = nextId++;
+          else nextId = Math.max(nextId, e.id+1);
+          this.entries.push(e);
+          this.byId.set(e.id, e);
+          if(e.source && /^(wikipedia|britannica|bbc):/i.test(e.source)){
+            this.titlesSeen.add(e.source);
+          }
+        }catch{}
+      }
+    }
+    this.meta.count=this.entries.length;
+  },
+  async ensureSeed(force=false){
+    if(force || this.meta.version!==KB_VERSION){
+      // Wipe shards.
+      const items=await opfsList(kbDir);
+      for(const it of items) if(/^shard-\d+\.jsonl$/.test(it.name)) await opfsRemove(kbDir, it.name);
+      this.entries=[]; this.byId.clear(); this.titlesSeen.clear();
+      this.meta={version:KB_VERSION, count:0, shard:0, lines:0};
+      await this.addBulk(SEED_KB.map(e=>({...e, ts:Date.now()})));
+      await this.saveMeta();
+    }
+  },
+  async saveMeta(){ if(OPFS_AVAILABLE) await opfsWriteText(kbDir,'meta.json', JSON.stringify(this.meta)); },
+  shardName(){ return `shard-${String(this.meta.shard).padStart(4,'0')}.jsonl`; },
+  async addBulk(items){
+    if(!items.length) return [];
+    const ids=[];
+    let nextId = this.entries.length ? Math.max(...this.entries.map(e=>e.id||0))+1 : 1;
+    if(this.byId.size) nextId = Math.max(nextId, ...this.byId.keys())+1;
+    const buf=[];
+    for(const it of items){
+      if(!it.id) it.id = nextId++;
+      this.entries.push(it); this.byId.set(it.id, it);
+      buf.push(JSON.stringify(it));
+      ids.push(it.id);
+      if(it.source) this.titlesSeen.add(it.source);
+    }
+    if(OPFS_AVAILABLE){
+      await opfsAppendText(kbDir, this.shardName(), buf.join('\n')+'\n');
+      this.meta.lines += items.length;
+      if(this.meta.lines >= SHARD_MAX_ENTRIES){ this.meta.shard++; this.meta.lines=0; }
+      this.meta.count=this.entries.length;
+      await this.saveMeta();
+    }
+    indexAddMany(items);
+    return ids;
+  },
+  async evictOldestExternal(targetCount){
+    if(this.entries.length<=targetCount) return;
+    const overflow=this.entries.length-targetCount;
+    const candidates=this.entries
+      .map((e,idx)=>e && /^(wikipedia|britannica|bbc):/i.test(e.source||'') ? {e,idx,ts:e.ts||0}:null)
+      .filter(Boolean)
+      .sort((a,b)=>a.ts-b.ts)
+      .slice(0, overflow);
+    if(!candidates.length) return;
+    // Mark deleted in memory; rewrite a compaction shard.
+    const removedIds=new Set();
+    for(const c of candidates){
+      indexRemoveEntry(c.e);
+      this.byId.delete(c.e.id);
+      this.titlesSeen.delete(c.e.source||'');
+      removedIds.add(c.e.id);
+    }
+    this.entries = this.entries.filter(e=>!removedIds.has(e.id));
+    this.meta.count = this.entries.length;
+    if(OPFS_AVAILABLE) await this.compact();
+  },
+  async clearExternal(){
+    const removedIds=new Set();
+    for(const e of this.entries){
+      if(e && /^(wikipedia|britannica|bbc):/i.test(e.source||'')){
+        indexRemoveEntry(e);
+        this.byId.delete(e.id);
+        removedIds.add(e.id);
+      }
+    }
+    this.entries = this.entries.filter(e=>!removedIds.has(e.id));
+    this.titlesSeen.clear();
+    this.meta.count=this.entries.length;
+    if(OPFS_AVAILABLE) await this.compact();
+  },
+  async compact(){
+    // Rewrite all shards from current memory.
+    const items=await opfsList(kbDir);
+    for(const it of items) if(/^shard-\d+\.jsonl$/.test(it.name)) await opfsRemove(kbDir, it.name);
+    this.meta.shard=0; this.meta.lines=0;
+    if(!this.entries.length){ await this.saveMeta(); return; }
+    let buf=[], shardIdx=0;
+    for(const e of this.entries){
+      buf.push(JSON.stringify(e));
+      if(buf.length>=SHARD_MAX_ENTRIES){
+        await opfsWriteText(kbDir, `shard-${String(shardIdx).padStart(4,'0')}.jsonl`, buf.join('\n')+'\n');
+        shardIdx++; buf=[];
+      }
+    }
+    if(buf.length){
+      await opfsWriteText(kbDir, `shard-${String(shardIdx).padStart(4,'0')}.jsonl`, buf.join('\n')+'\n');
+    }
+    this.meta.shard=shardIdx; this.meta.lines=buf.length;
+    this.meta.count=this.entries.length;
+    await this.saveMeta();
+  },
+  async wipeAll(){
+    const items=await opfsList(kbDir);
+    for(const it of items) await opfsRemove(kbDir, it.name);
+    this.entries=[]; this.byId.clear(); this.titlesSeen.clear();
+    this.meta={version:0, count:0, shard:0, lines:0};
+    INDEX.clear();
+  },
+};
+
+/* ---------- Chat store ---------- */
+const CHATS = {
+  index:[],     // [{id,title,updatedAt}]
+  current:null, // full chat object
+  async load(){
+    if(!OPFS_AVAILABLE){
+      try{this.index=JSON.parse(localStorage.getItem('ai:chats')||'[]')}catch{this.index=[]}
+      return;
+    }
+    const t=await opfsReadText(chatsDir,'index.json');
+    if(t){ try{this.index=JSON.parse(t)}catch{this.index=[]} }
+  },
+  async saveIndex(){
+    this.index.sort((a,b)=>b.updatedAt-a.updatedAt);
+    if(OPFS_AVAILABLE) await opfsWriteText(chatsDir,'index.json', JSON.stringify(this.index));
+    else try{localStorage.setItem('ai:chats', JSON.stringify(this.index))}catch{}
+  },
+  async create(){
+    const id='c_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
+    const chat={id, title:'New chat', createdAt:Date.now(), updatedAt:Date.now(), messages:[]};
+    if(OPFS_AVAILABLE) await opfsWriteText(chatsDir, id+'.json', JSON.stringify(chat));
+    else try{localStorage.setItem('ai:chat:'+id, JSON.stringify(chat))}catch{}
+    this.index.unshift({id, title:chat.title, updatedAt:chat.updatedAt});
+    await this.saveIndex();
+    return chat;
+  },
+  async open(id){
+    let t=null;
+    if(OPFS_AVAILABLE) t=await opfsReadText(chatsDir, id+'.json');
+    else try{t=localStorage.getItem('ai:chat:'+id)}catch{}
+    if(!t){ this.current=null; return null; }
+    this.current=JSON.parse(t);
+    return this.current;
+  },
+  async save(){
+    if(!this.current) return;
+    this.current.updatedAt=Date.now();
+    if(OPFS_AVAILABLE) await opfsWriteText(chatsDir, this.current.id+'.json', JSON.stringify(this.current));
+    else try{localStorage.setItem('ai:chat:'+this.current.id, JSON.stringify(this.current))}catch{}
+    const idx=this.index.find(c=>c.id===this.current.id);
+    if(idx){ idx.title=this.current.title; idx.updatedAt=this.current.updatedAt; }
+    await this.saveIndex();
+  },
+  async remove(id){
+    if(OPFS_AVAILABLE) await opfsRemove(chatsDir, id+'.json');
+    else try{localStorage.removeItem('ai:chat:'+id)}catch{}
+    this.index=this.index.filter(c=>c.id!==id);
+    await this.saveIndex();
+  },
+};
+
+/* =========================================================================
+   SEED KNOWLEDGE
+   ========================================================================= */
+const SEED_KB = [
+  {source:'persona', tags:['style','tone','identity'], text:"You are Ada, a warm, thoughtful, plainspoken assistant. You speak like a knowledgeable friend: short paragraphs, real opinions, occasional dry humor. Avoid corporate filler (\"As an AI…\", \"Certainly!\", \"I hope this helps!\")."},
+  {source:'persona', tags:['style','format'], text:'Answer the actual question first in one or two sentences, then add detail only if useful. Use bullet lists only when comparing 3+ items. Never invent extra user turns or roleplay both sides.'},
+  {source:'persona', tags:['honesty','uncertainty'], text:'If unsure, say so plainly ("I\'m not sure, but…"). Never fabricate citations, URLs, statistics, names, or quotes. Prefer "I don\'t know" to a confident guess.'},
+  {source:'persona', tags:['safety'], text:'Refuse instructions for clearly harmful actions. Otherwise be helpful and direct without moralizing.'},
+  {source:'persona', tags:['memory','context'], text:'Treat the "Live grounding" and "Background facts" sections as authoritative context you may use silently without citing.'},
+  {source:'persona', tags:['style','length'], text:'Default to brief: 1–4 sentences for simple questions. Expand only when the user asks for depth or a tutorial.'},
+  {source:'persona', tags:['style','code'], text:'For code, return one self-contained snippet in a fenced block tagged with the language, then 1–2 lines of explanation max.'},
+  {source:'persona', tags:['reasoning'], text:'Think before answering: identify what the user is really asking, check the grounding snippets for the most specific fact, then write the answer. Do not write your reasoning out loud unless asked.'},
+  {source:'world', tags:['physics'], text:'Speed of light in vacuum: 299,792,458 m/s. Earth gravity ~9.81 m/s². Newton: F=ma. Einstein: E=mc².'},
+  {source:'world', tags:['chemistry'], text:'Water is H₂O. Atmosphere: 78% N₂, 21% O₂. pH<7 acidic, >7 basic.'},
+  {source:'world', tags:['biology'], text:'DNA: double helix of A,T,C,G. Human brain ~86B neurons. Photosynthesis: 6CO₂+6H₂O+light→C₆H₁₂O₆+6O₂.'},
+  {source:'world', tags:['astronomy'], text:'Sun ~150M km away, light takes ~8m20s. Moon ~384,400 km, orbits in 27.3 days. Universe ~13.8 Gyr old.'},
+  {source:'world', tags:['geography'], text:'Most populous countries 2024: India ~1.43B, China ~1.42B, USA ~335M. Tallest mountain: Everest 8,849m.'},
+  {source:'world', tags:['tech'], text:'Internet uses TCP/IP. Web invented by Tim Berners-Lee 1989. LLMs predict next token from context.'},
+  {source:'pattern', tags:['greeting','hello'], text:'When greeted, reply with one short warm sentence and ask what they want to do.'},
+  {source:'pattern', tags:['thanks','goodbye'], text:'When thanked or said goodbye, respond briefly and warmly without restating everything.'},
+  {source:'pattern', tags:['definition','what is','explain'], text:'For "what is X" questions, lead with a one-sentence plain-English definition, then optional one-paragraph context.'},
+  {source:'pattern', tags:['compare','vs','difference'], text:'For comparisons, headline difference, then 2–4 bullets, then one-line recommendation.'},
+  {source:'pattern', tags:['news','latest','breaking'], text:'For news/current-events questions, prefer BBC News snippets if available; otherwise say you may not have the latest information.'},
+];
+
+/* =========================================================================
+   TOKENIZE + BM25 INVERTED INDEX
+   ========================================================================= */
+const STOPWORDS=new Set("the a an of and or to in on at for is are was were be been being it its this that these those i you he she we they them us my your our their what which who whom when where why how do does did can could should would will just like get got make made about with from into over under more most less few any some not no yes if so as by but than then there here".split(' '));
+function tokenize(s){
+  const out=[]; const m=(s||'').toLowerCase().match(/[a-z][a-z0-9]{2,}/g);
+  if(!m) return out;
+  const seen=new Set();
+  for(const t of m) if(!STOPWORDS.has(t) && !seen.has(t)){seen.add(t); out.push(t);}
+  return out;
+}
+const INDEX=new Map();   // token -> Set<entryId>
+function indexAddEntry(e){
+  const toks=new Set([...(e.tags||[]).flatMap(t=>tokenize(t)), ...tokenize(e.text).slice(0,220)]);
+  e._toks=toks;
+  for(const t of toks){
+    let s=INDEX.get(t); if(!s){s=new Set(); INDEX.set(t,s);}
+    s.add(e.id);
+  }
+}
+function indexAddMany(arr){ for(const e of arr) indexAddEntry(e); }
+function indexRemoveEntry(e){
+  if(!e?._toks) return;
+  for(const t of e._toks){ const s=INDEX.get(t); if(!s) continue; s.delete(e.id); if(!s.size) INDEX.delete(t); }
+}
+function rebuildIndex(){ INDEX.clear(); for(const e of KB.entries) if(e) indexAddEntry(e); }
+
+const BM25={k1:1.5, b:0.75};
+function retrieve(userText, kFacts){
+  const N=KB.entries.length||1;
+  let totalLen=0, docs=0;
+  for(const e of KB.entries) if(e?._toks){ totalLen+=e._toks.size; docs++; }
+  const avgdl=docs?totalLen/docs:1;
+  const qTokens=Array.from(new Set(tokenize(userText)));
+  const scores=new Map();
+  for(const t of qTokens){
+    const postings=INDEX.get(t); if(!postings) continue;
+    const df=postings.size;
+    const idf=Math.log(1+(N-df+0.5)/(df+0.5));
+    if(idf<0.15) continue;
+    for(const id of postings){
+      const e=KB.byId.get(id); if(!e) continue;
+      const dl=e._toks?e._toks.size:1;
+      const norm=1-BM25.b+BM25.b*(dl/avgdl);
+      const contrib=idf*((BM25.k1+1)/(1+BM25.k1*norm));
+      // Source-priority boost: BBC for news-y queries, Britannica for "what is/who is/explain".
+      let boost=1;
+      const src=(e.source||'').toLowerCase();
+      if(src.startsWith('bbc:') && /\b(news|latest|today|breaking|happened|happening|update|story)\b/i.test(userText)) boost=1.6;
+      if(src.startsWith('britannica:') && /\b(what is|who is|define|explain|history of)\b/i.test(userText)) boost=1.35;
+      if(src.startsWith('wikipedia:')) boost=Math.max(boost,1.1);
+      scores.set(id,(scores.get(id)||0)+contrib*boost);
+    }
+  }
+  const persona=KB.entries.filter(e=>e?.source==='persona').slice(0,10);
+  const patterns=[...scores.entries()].filter(([id])=>KB.byId.get(id)?.source==='pattern').sort((a,b)=>b[1]-a[1]).slice(0,2).map(([id])=>KB.byId.get(id));
+  const factsRanked=[...scores.entries()].filter(([id])=>{const e=KB.byId.get(id); return e && e.source!=='persona' && e.source!=='pattern';}).sort((a,b)=>b[1]-a[1]);
+  let facts=[];
+  if(factsRanked.length){
+    const topScore=factsRanked[0][1];
+    const minScore=Math.max(0.8, topScore*0.35);
+    facts=factsRanked.filter(([,s])=>s>=minScore).slice(0,kFacts).map(([id])=>KB.byId.get(id));
+  }
+  return {persona, facts, patterns};
+}
+
+/* =========================================================================
+   UTIL
+   ========================================================================= */
+function fmtBytes(n){ if(n<1024) return n+' B'; if(n<1048576) return (n/1024).toFixed(1)+' KB'; if(n<1073741824) return (n/1048576).toFixed(1)+' MB'; return (n/1073741824).toFixed(2)+' GB'; }
+function escHtml(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+const idle=(cb,timeout=4000)=>(window.requestIdleCallback||((c)=>setTimeout(()=>c({timeRemaining:()=>0}),1)))(cb,{timeout});
+function withTimeout(promise, ms){ return Promise.race([promise, new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')), ms))]); }
+
+let _bytesUsed=0;
+async function refreshBytes(){ try{ if(navigator.storage?.estimate){ const {usage=0}=await navigator.storage.estimate(); _bytesUsed=usage; } }catch{} }
+const APP_CAP_BYTES=10*1024*1024*1024; // 10 GB display cap with OPFS
+let refreshScheduled=false;
+function refreshUsageUI(){
+  if(refreshScheduled) return; refreshScheduled=true;
+  requestAnimationFrame(()=>{
+    refreshScheduled=false;
+    const used=_bytesUsed;
+    const pct=Math.min(100,(used/APP_CAP_BYTES)*100);
+    usageBar.firstElementChild.style.width=pct.toFixed(2)+'%';
+    usageBar.classList.toggle('warn', pct>70 && pct<95);
+    usageBar.classList.toggle('full', pct>=95);
+    const line=`${fmtBytes(used)} used (${pct.toFixed(1)}% of 10 GB cap)`;
+    usageText.textContent=line;
+    storageSummary.textContent=`Storage: ${fmtBytes(used)}`;
+    kbInfo.innerHTML=`Knowledge base: <b>${KB.entries.length.toLocaleString()}</b> entries in OPFS ` +
+      `<span class="kb-tag">persona</span><span class="kb-tag">world</span>` +
+      `<span class="kb-tag">wikipedia</span><span class="kb-tag">britannica</span><span class="kb-tag">bbc</span>`;
+    kbSummary.textContent=`KB: ${KB.entries.length.toLocaleString()} entries`;
+  });
+}
+
+/* =========================================================================
+   MODEL CATALOG
+   ========================================================================= */
+const MODELS=[
+  {id:'HuggingFaceTB/SmolLM2-135M-Instruct',label:'⚡ SmolLM2 135M — instant, ultra-light',mb:110,group:'⚡ Tiny & fast (recommended)'},
+  {id:'HuggingFaceTB/SmolLM2-360M-Instruct',label:'⚡ SmolLM2 360M — fast, smarter',mb:260,group:'⚡ Tiny & fast (recommended)'},
+  {id:'onnx-community/LFM2-350M-ONNX',label:'⚡ Liquid LFM2 350M',mb:300,group:'⚡ Tiny & fast (recommended)'},
+  {id:'onnx-community/Qwen2.5-0.5B-Instruct',label:'⚡ Qwen2.5 0.5B — best tiny generalist',mb:380,group:'⚡ Tiny & fast (recommended)'},
+  {id:'onnx-community/Qwen3-0.6B-ONNX',label:'⚡ Qwen3 0.6B — newest tiny (2025)',mb:500,group:'⚡ Tiny & fast (recommended)'},
+  {id:'onnx-community/LFM2-700M-ONNX',label:'⚡ Liquid LFM2 700M',mb:600,group:'⚡ Tiny & fast (recommended)'},
+  {id:'onnx-community/Llama-3.2-1B-Instruct-q4f16',label:'⚡ Llama 3.2 1B q4f16',mb:700,group:'⚡ Tiny & fast (recommended)'},
+  {id:'onnx-community/Qwen3-1.7B-ONNX',label:'⭐ Qwen3 1.7B — smartest small',mb:1200,group:'⭐ Smarter (1–4B)'},
+  {id:'onnx-community/Qwen2.5-1.5B-Instruct',label:'Qwen2.5 1.5B Instruct',mb:1100,group:'⭐ Smarter (1–4B)'},
+  {id:'onnx-community/Llama-3.2-3B-Instruct',label:'Llama 3.2 3B Instruct',mb:2400,group:'⭐ Smarter (1–4B)'},
+  {id:'onnx-community/Qwen2.5-3B-Instruct',label:'Qwen2.5 3B Instruct',mb:2400,group:'⭐ Smarter (1–4B)'},
+  {id:'onnx-community/Qwen3-4B-ONNX',label:'Qwen3 4B',mb:2800,group:'⭐ Smarter (1–4B)'},
+  {id:'onnx-community/Qwen3-4B-Thinking-2507-ONNX',label:'Qwen3 4B Thinking (reasoning)',mb:2800,group:'⭐ Smarter (1–4B)'},
+  {id:'onnx-community/gemma-3-1b-it-ONNX',label:'Gemma 3 1B IT',mb:900,group:'⭐ Smarter (1–4B)'},
+  {id:'onnx-community/gemma-3-4b-it-ONNX',label:'Gemma 3 4B IT',mb:2600,group:'⭐ Smarter (1–4B)'},
+  {id:'onnx-community/Phi-4-mini-instruct-ONNX',label:'Phi-4 Mini Instruct (3.8B)',mb:2400,group:'⭐ Smarter (1–4B)'},
+  {id:'onnx-community/Phi-4-mini-reasoning-ONNX',label:'Phi-4 Mini Reasoning (3.8B)',mb:2400,group:'⭐ Smarter (1–4B)'},
+  {id:'onnx-community/DeepSeek-R1-Distill-Qwen-1.5B-ONNX',label:'DeepSeek-R1-Distill Qwen 1.5B',mb:1100,group:'🧠 Reasoning'},
+  {id:'onnx-community/DeepSeek-R1-Distill-Qwen-7B-ONNX',label:'DeepSeek-R1-Distill Qwen 7B',mb:5000,group:'🧠 Reasoning'},
+  {id:'onnx-community/DeepSeek-R1-Distill-Llama-8B-ONNX',label:'DeepSeek-R1-Distill Llama 8B',mb:5800,group:'🧠 Reasoning'},
+  {id:'onnx-community/Meta-Llama-3.1-8B-Instruct',label:'Llama 3.1 8B Instruct',mb:5800,group:'🏆 Large (5B+)'},
+  {id:'onnx-community/Qwen2.5-7B-Instruct',label:'Qwen2.5 7B Instruct',mb:5200,group:'🏆 Large (5B+)'},
+  {id:'onnx-community/Qwen3-8B-ONNX',label:'Qwen3 8B',mb:5800,group:'🏆 Large (5B+)'},
+  {id:'onnx-community/Mistral-7B-Instruct-v0.3',label:'Mistral 7B Instruct v0.3',mb:4800,group:'🏆 Large (5B+)'},
+  {id:'onnx-community/Qwen2.5-Coder-7B-Instruct',label:'Qwen2.5-Coder 7B',mb:5200,group:'💻 Coder'},
+  {id:'onnx-community/Qwen2.5-Coder-1.5B-Instruct',label:'Qwen2.5-Coder 1.5B',mb:1100,group:'💻 Coder'},
+];
+
+let availableMB=Infinity;
+function buildModelOptions(){
+  modelSel.innerHTML='';
+  const byGroup=new Map();
+  for(const m of MODELS){ if(!byGroup.has(m.group)) byGroup.set(m.group,[]); byGroup.get(m.group).push(m); }
+  for(const [group,items] of byGroup){
+    const og=document.createElement('optgroup'); og.label=group;
+    for(const m of items){
+      const opt=document.createElement('option');
+      const fits=m.mb<availableMB-100;
+      opt.value=m.id;
+      const sz=m.mb<1000?m.mb+' MB':(m.mb/1024).toFixed(1)+' GB';
+      opt.textContent=`${m.label} — ${sz}${fits?'':' ⚠'}`;
+      og.appendChild(opt);
+    }
+    modelSel.appendChild(og);
+  }
+  let last=null; try{last=localStorage.getItem('ai:lastModel')}catch{}
+  if(last && MODELS.some(m=>m.id===last)) modelSel.value=last;
+  else {
+    const want=['onnx-community/Qwen3-1.7B-ONNX','onnx-community/Llama-3.2-1B-Instruct-q4f16','onnx-community/Qwen2.5-0.5B-Instruct','HuggingFaceTB/SmolLM2-360M-Instruct'];
+    for(const id of want){ const m=MODELS.find(x=>x.id===id); if(m && m.mb<availableMB-200){modelSel.value=id; break;} }
+    if(!modelSel.value) modelSel.value=MODELS[0].id;
+  }
+  setStatus('Pick a model and click Load');
+}
+function setStatus(msg,cls){ statusEl.textContent=msg; dot.className='dot'+(cls?' '+cls:''); }
+
+/* =========================================================================
+   UI: messages
+   ========================================================================= */
+function addMsg(role, text=''){
+  const div=document.createElement('div'); div.className='msg '+role;
+  const b=document.createElement('div'); b.className='bubble';
+  const span=document.createElement('span'); span.className='txt'; span.textContent=text;
+  b.appendChild(span); div.appendChild(b);
+  if(role==='bot'){
+    const a=document.createElement('div'); a.className='row-actions';
+    const cp=document.createElement('button'); cp.textContent='Copy'; cp.type='button';
+    cp.onclick=()=>{navigator.clipboard?.writeText(span.textContent||'').then(()=>{cp.textContent='✓'; setTimeout(()=>cp.textContent='Copy',1200);});};
+    a.appendChild(cp); b.appendChild(a);
+  }
+  chat.appendChild(div); chat.scrollTop=chat.scrollHeight;
+  return new Proxy(b,{
+    set(t,p,v){ if(p==='textContent'){span.textContent=v; return true;} t[p]=v; return true; },
+    get(t,p){ if(p==='textContent') return span.textContent; const v=t[p]; return typeof v==='function'?v.bind(t):v; }
+  });
+}
+
+/* =========================================================================
+   GEN SETTINGS
+   ========================================================================= */
+const GEN={temperature:0.4, top_p:0.92, top_k:40, max_new_tokens:320, repetition_penalty:1.18,
+           history_turns:6, live_snippets:5, kb_facts:8};
+function loadSettings(){
+  try{
+    const s=JSON.parse(localStorage.getItem('ai:gen')||'{}'); Object.assign(GEN,s);
+  }catch{}
+  gTemp.value=GEN.temperature; gTopP.value=GEN.top_p; gMaxTok.value=GEN.max_new_tokens;
+  gRep.value=GEN.repetition_penalty; gTopK.value=GEN.top_k;
+  gHist.value=GEN.history_turns; gLive.value=GEN.live_snippets; gFacts.value=GEN.kb_facts;
+  gTempVal.textContent=(+GEN.temperature).toFixed(2); gTopPVal.textContent=(+GEN.top_p).toFixed(2);
+  let cap=20000; try{cap=+(localStorage.getItem('ai:kbCap')||20000)}catch{}
+  kbCap.value=cap; kbCapVal.textContent=cap;
+  // Sources
+  try{
+    const s=JSON.parse(localStorage.getItem('ai:sources')||'{}');
+    if(typeof s.wiki==='boolean') srcWiki.checked=s.wiki;
+    if(typeof s.brit==='boolean') srcBrit.checked=s.brit;
+    if(typeof s.bbc==='boolean')  srcBBC.checked=s.bbc;
+  }catch{}
+}
+function saveGen(){ try{localStorage.setItem('ai:gen', JSON.stringify(GEN))}catch{} }
+function saveSources(){ try{localStorage.setItem('ai:sources', JSON.stringify({wiki:srcWiki.checked, brit:srcBrit.checked, bbc:srcBBC.checked}))}catch{} }
+gTemp.addEventListener('input',()=>{GEN.temperature=+gTemp.value; gTempVal.textContent=GEN.temperature.toFixed(2); saveGen();});
+gTopP.addEventListener('input',()=>{GEN.top_p=+gTopP.value; gTopPVal.textContent=GEN.top_p.toFixed(2); saveGen();});
+gMaxTok.addEventListener('change',()=>{GEN.max_new_tokens=Math.max(32,Math.min(4096,+gMaxTok.value||320)); saveGen();});
+gRep.addEventListener('change',()=>{GEN.repetition_penalty=Math.max(1,+gRep.value||1.18); saveGen();});
+gTopK.addEventListener('change',()=>{GEN.top_k=Math.max(0,+gTopK.value||40); saveGen();});
+gHist.addEventListener('change',()=>{GEN.history_turns=Math.max(1,Math.min(20,+gHist.value||6)); saveGen();});
+gLive.addEventListener('change',()=>{GEN.live_snippets=Math.max(0,Math.min(8,+gLive.value||5)); saveGen();});
+gFacts.addEventListener('change',()=>{GEN.kb_facts=Math.max(0,Math.min(20,+gFacts.value||8)); saveGen();});
+kbCap.addEventListener('input',()=>{kbCapVal.textContent=kbCap.value; try{localStorage.setItem('ai:kbCap', kbCap.value)}catch{}});
+[srcWiki,srcBrit,srcBBC].forEach(el=>el.addEventListener('change', saveSources));
+
+/* =========================================================================
+   PROMPT BUILDING
+   ========================================================================= */
+let LIVE_FACTS=[];
+
+function buildSystemPrompt(userText){
+  const {persona, facts, patterns}=retrieve(userText, GEN.kb_facts);
+  const parts=[];
+  parts.push('You are Ada, a warm, plainspoken, knowledgeable assistant. Answer the user\'s latest message accurately and concisely using the grounding below.');
+  parts.push('');
+  parts.push('# Style');
+  for(const p of persona) parts.push('- '+p.text);
+  if(patterns.length){
+    parts.push(''); parts.push('# Response pattern hints');
+    for(const p of patterns) parts.push('- '+p.text);
+  }
+  if(LIVE_FACTS.length){
+    parts.push(''); parts.push('# Live grounding for THIS question (authoritative — prefer these facts; do not cite)');
+    for(const f of LIVE_FACTS) parts.push('- '+f);
+  }
+  if(facts.length){
+    parts.push(''); parts.push('# Background facts from local KB (use silently, ignore if off-topic)');
+    for(const f of facts) parts.push('- '+f.text);
+  }
+  parts.push('');
+  parts.push('# Hard rules');
+  parts.push("- Answer ONLY the user's latest message. Never write a follow-up user turn or roleplay both sides.");
+  parts.push('- Be direct, concrete, factual. No filler ("Certainly!", "As an AI…", "I hope this helps!").');
+  parts.push('- If unsure, say so plainly. Never invent facts, names, numbers, URLs, or citations.');
+  parts.push('- Prefer the Live grounding section over your own memory when they overlap (it is current).');
+  parts.push('- Default length: 1–4 sentences for simple questions; expand only when asked for depth.');
+  parts.push('- Use literal plain language. Avoid metaphor or simile unless explicitly asked.');
+  parts.push('- For news/current-events questions, ground every claim in the BBC snippets when available; otherwise state that you may not have the very latest information.');
+  return parts.join('\n');
+}
+function buildMessages(userText){
+  const recent=(CHATS.current?.messages||[]).slice(-GEN.history_turns*2)
+    .map(m=>({role:m.role, content:m.content}));
+  return [{role:'system', content:buildSystemPrompt(userText)}, ...recent, {role:'user', content:userText}];
+}
+
+/* =========================================================================
+   LIVE SOURCES: Wikipedia, Britannica, BBC News
+   ========================================================================= */
+const CORS_PROXY='https://api.allorigins.win/raw?url=';
+
+async function fetchJSON(url, {timeout=8000, headers}={}){
+  return withTimeout(fetch(url,{headers:headers||{'Accept':'application/json'}}).then(r=>{
+    if(!r.ok) throw new Error('HTTP '+r.status); return r.json();
+  }), timeout);
+}
+async function fetchText(url, {timeout=10000, headers}={}){
+  return withTimeout(fetch(url,{headers:headers||{}}).then(r=>{
+    if(!r.ok) throw new Error('HTTP '+r.status); return r.text();
+  }), timeout);
+}
+
+/* --- Wikipedia --- */
+async function wikiSummary(title){
+  const url='https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(title.replace(/ /g,'_'));
+  const j=await fetchJSON(url);
+  return {title:j.title||title, extract:j.extract||''};
+}
+async function wikiSearch(query, n=3){
+  try{
+    const url='https://en.wikipedia.org/w/api.php?action=query&list=search&srlimit='+n+'&format=json&origin=*&utf8=1&srsearch='+encodeURIComponent(query);
+    const j=await fetchJSON(url);
+    const hits=(j.query?.search||[]).slice(0,n);
+    const out=[];
+    for(const h of hits){
+      try{
+        const s=await wikiSummary(h.title);
+        if(s.extract){
+          const e=String(s.extract).replace(/\s+/g,' ').trim().slice(0,650);
+          if(e) out.push('Wikipedia · '+s.title+': '+e);
+        }
+      }catch{}
+    }
+    return out;
+  }catch{return [];}
+}
+async function wikiRandomTitles(n){
+  const url=`https://en.wikipedia.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=${encodeURIComponent(n)}&format=json&origin=*`;
+  const j=await fetchJSON(url);
+  return (j.query?.random||[]).map(x=>x.title);
+}
+
+/* --- Britannica (scrape topic page via CORS proxy) --- */
+function stripHtml(html){
+  return html.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<style[\s\S]*?<\/style>/gi,'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim();
+}
+async function britannicaLookup(query){
+  try{
+    // Britannica search page returns HTML; first result link usually goes to /topic/<slug>
+    const searchUrl='https://www.britannica.com/search?query='+encodeURIComponent(query);
+    const html=await fetchText(CORS_PROXY+encodeURIComponent(searchUrl), {timeout:9000});
+    const m=html.match(/href="(\/topic\/[A-Za-z0-9\-]+)"/);
+    if(!m) return [];
+    const slug=m[1];
+    const articleUrl='https://www.britannica.com'+slug;
+    const aHtml=await fetchText(CORS_PROXY+encodeURIComponent(articleUrl), {timeout:10000});
+    // Title
+    let title=query;
+    const tm=aHtml.match(/<title>([^<]+)<\/title>/i);
+    if(tm) title=tm[1].replace(/\s*\|\s*Britannica.*$/i,'').trim();
+    // First meaningful paragraph(s)
+    const paras=[...aHtml.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)].map(m=>stripHtml(m[1])).filter(t=>t.length>120);
+    const body=paras.slice(0,2).join(' ').slice(0,900);
+    if(!body) return [];
+    return ['Britannica · '+title+': '+body];
+  }catch{return [];}
+}
+async function britannicaIngest(title){
+  try{
+    const articleUrl='https://www.britannica.com/topic/'+encodeURIComponent(title.replace(/\s+/g,'-'));
+    const aHtml=await fetchText(CORS_PROXY+encodeURIComponent(articleUrl), {timeout:10000});
+    const paras=[...aHtml.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)].map(m=>stripHtml(m[1])).filter(t=>t.length>120);
+    const body=paras.slice(0,4).join(' ').slice(0,1800);
+    if(!body) return null;
+    return {title, extract:body};
+  }catch{return null;}
+}
+
+/* --- BBC News (RSS) --- */
+const BBC_FEEDS=[
+  'https://feeds.bbci.co.uk/news/rss.xml',
+  'https://feeds.bbci.co.uk/news/world/rss.xml',
+  'https://feeds.bbci.co.uk/news/technology/rss.xml',
+  'https://feeds.bbci.co.uk/news/business/rss.xml',
+  'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml',
+];
+function parseRSS(xml){
+  const items=[];
+  const re=/<item>([\s\S]*?)<\/item>/gi;
+  let m;
+  while((m=re.exec(xml))){
+    const block=m[1];
+    const get=(tag)=>{const r=new RegExp('<'+tag+'[^>]*>([\\s\\S]*?)<\\/'+tag+'>','i'); const x=block.match(r); return x?x[1].replace(/<!\[CDATA\[|\]\]>/g,'').replace(/<[^>]+>/g,'').trim():'';};
+    items.push({title:get('title'), description:get('description'), pubDate:get('pubDate'), link:get('link')});
+  }
+  return items;
+}
+async function bbcFetchAll(maxPerFeed=15){
+  const all=[];
+  await Promise.all(BBC_FEEDS.map(async feed=>{
+    try{
+      const xml=await fetchText(CORS_PROXY+encodeURIComponent(feed), {timeout:9000});
+      const items=parseRSS(xml).slice(0,maxPerFeed);
+      for(const it of items) all.push(it);
+    }catch{}
+  }));
+  // Dedupe by title
+  const seen=new Set(); const out=[];
+  for(const it of all){ if(!it.title || seen.has(it.title)) continue; seen.add(it.title); out.push(it); }
+  return out;
+}
+async function bbcLookup(query, n=3){
+  // Use cached BBC entries from KB if recent, else fetch fresh top headlines and pick relevant ones.
+  const ql=query.toLowerCase();
+  const qToks=tokenize(query);
+  // Try local first
+  const local=[];
+  for(const e of KB.entries){
+    if(!e || !e.source?.startsWith('bbc:')) continue;
+    const t=(e.text||'').toLowerCase();
+    let score=0; for(const tok of qToks) if(t.includes(tok)) score++;
+    if(score) local.push({e, score});
+  }
+  if(local.length){
+    return local.sort((a,b)=>b.score-a.score).slice(0,n).map(x=>'BBC News · '+x.e.text);
+  }
+  // Otherwise pull top headlines (covers "what's in the news today" style).
+  try{
+    const items=await bbcFetchAll(5);
+    return items.slice(0,n).map(it=>'BBC News · '+it.title+(it.description?': '+it.description:'')+(it.pubDate?' ['+it.pubDate+']':''));
+  }catch{return [];}
+}
+
+/* --- Chunk helper --- */
+const MAX_CHARS_PER_ENTRY=1800;
+function chunkText(text, source, title){
+  const cleaned=(text||'').replace(/\s+/g,' ').trim();
+  if(cleaned.length<80) return [];
+  const out=[];
+  for(let i=0;i<cleaned.length;i+=MAX_CHARS_PER_ENTRY){
+    const piece=cleaned.slice(i,i+MAX_CHARS_PER_ENTRY);
+    const tags=Array.from(new Set(((title||'')+' '+piece).toLowerCase().match(/[a-z]{4,}/g)||[])).slice(0,14);
+    out.push({source, tags, text:(title?title+' — ':'')+piece});
+  }
+  return out;
+}
+
+/* =========================================================================
+   AUTO-FEED
+   ========================================================================= */
+const FEED_BATCH=3;
+const FEED_INTERVAL_MS=20000;
+let feedPaused=false;
+let feedTimer=null;
+const feedStats={ok:0, fail:0, bytes:0, lastTitle:'', skipped:0, bbcOk:0, britOk:0};
+
+function updateFeedStatus(){
+  const pct=(_bytesUsed/APP_CAP_BYTES)*100;
+  const autoOff=pct>=90;
+  const state=!navigator.onLine?'offline (paused)':autoOff?'paused (storage >90%)':feedPaused?'paused':document.hidden?'paused (tab hidden)':'streaming';
+  wikiStatus.textContent=`Auto-feed: ${state} · Wikipedia ${feedStats.ok} · Britannica ${feedStats.britOk} · BBC ${feedStats.bbcOk} · ${feedStats.skipped} dupes · ${feedStats.fail} fail · ${(feedStats.bytes/1024).toFixed(0)} KB pulled` + (feedStats.lastTitle?` · last: "${feedStats.lastTitle}"`:'');
+}
+
+async function ingestWikiBatch(n=FEED_BATCH){
+  if(!srcWiki.checked) return 0;
+  if(!navigator.onLine) throw new Error('offline');
+  const userTitles=(wikiTopics.value||'').split(/\n+/).map(s=>s.trim()).filter(Boolean);
+  let titles;
+  if(userTitles.length){ titles=[]; for(let i=0;i<n;i++) titles.push(userTitles[(Math.random()*userTitles.length)|0]); }
+  else titles=await wikiRandomTitles(n);
+  const newChunks=[];
+  for(const t of titles){
+    const key='wikipedia:'+t;
+    if(KB.titlesSeen.has(key)){ feedStats.skipped++; continue; }
+    try{
+      const {title,extract}=await wikiSummary(t);
+      if(!extract){ feedStats.fail++; continue; }
+      const key2='wikipedia:'+title;
+      if(KB.titlesSeen.has(key2)){ feedStats.skipped++; continue; }
+      const chunks=chunkText(extract, key2, title).map(c=>({...c, ts:Date.now()}));
+      if(chunks.length){
+        newChunks.push(...chunks);
+        feedStats.ok++; feedStats.bytes+=extract.length; feedStats.lastTitle=title;
+      }
+    }catch{feedStats.fail++;}
+  }
+  if(newChunks.length){
+    await KB.addBulk(newChunks);
+    await enforceKbCap();
+  }
+  await refreshBytes(); refreshUsageUI(); updateFeedStatus();
+  return newChunks.length;
+}
+async function ingestBritannicaBatch(topics){
+  if(!srcBrit.checked || !topics?.length) return 0;
+  const newChunks=[];
+  for(const t of topics){
+    const key='britannica:'+t;
+    if(KB.titlesSeen.has(key)){ feedStats.skipped++; continue; }
+    try{
+      const res=await britannicaIngest(t);
+      if(!res){ feedStats.fail++; continue; }
+      const chunks=chunkText(res.extract, key, res.title).map(c=>({...c, ts:Date.now()}));
+      if(chunks.length){
+        newChunks.push(...chunks);
+        feedStats.britOk++; feedStats.bytes+=res.extract.length; feedStats.lastTitle='Britannica: '+res.title;
+      }
+    }catch{feedStats.fail++;}
+  }
+  if(newChunks.length){ await KB.addBulk(newChunks); await enforceKbCap(); }
+  await refreshBytes(); refreshUsageUI(); updateFeedStatus();
+  return newChunks.length;
+}
+async function ingestBBC(){
+  if(!srcBBC.checked) return 0;
+  if(!navigator.onLine) return 0;
+  const items=await bbcFetchAll(15);
+  const newChunks=[];
+  for(const it of items){
+    const key='bbc:'+it.title;
+    if(KB.titlesSeen.has(key)) continue;
+    const text=(it.title||'')+(it.description?' — '+it.description:'')+(it.pubDate?' ['+it.pubDate+']':'');
+    if(text.length<40) continue;
+    const tags=Array.from(new Set((it.title+' '+it.description).toLowerCase().match(/[a-z]{4,}/g)||[])).slice(0,16);
+    tags.push('news','bbc','breaking');
+    newChunks.push({source:key, tags, text, ts:Date.now()});
+  }
+  if(newChunks.length){
+    feedStats.bbcOk+=newChunks.length;
+    feedStats.bytes+=newChunks.reduce((s,c)=>s+c.text.length,0);
+    feedStats.lastTitle='BBC: '+newChunks[0].text.slice(0,50);
+    await KB.addBulk(newChunks);
+    await enforceKbCap();
+  }
+  await refreshBytes(); refreshUsageUI(); updateFeedStatus();
+  return newChunks.length;
+}
+
+async function enforceKbCap(){
+  const cap=+kbCap.value||20000;
+  if(KB.entries.length<=cap) return;
+  await KB.evictOldestExternal(cap);
+}
+
+function scheduleFeedTick(){
+  if(feedTimer) clearTimeout(feedTimer);
+  feedTimer=setTimeout(()=>{
+    idle(async ()=>{
+      const pct=(_bytesUsed/APP_CAP_BYTES)*100;
+      if(!feedPaused && navigator.onLine && !busy && !document.hidden && pct<90){
+        try{
+          // Rotate: wiki, then occasionally BBC, then occasionally Britannica.
+          const r=Math.random();
+          if(r<0.7) await ingestWikiBatch();
+          else if(r<0.9 && srcBBC.checked) await ingestBBC();
+          else if(srcBrit.checked){
+            // Pull britannica for a couple of recent wiki titles
+            const recentWiki=KB.entries.filter(e=>e.source?.startsWith('wikipedia:')).slice(-10);
+            const sample=recentWiki.slice(-2).map(e=>e.source.slice('wikipedia:'.length));
+            if(sample.length) await ingestBritannicaBatch(sample);
+          }
+        }catch{}
+      } else updateFeedStatus();
+      scheduleFeedTick();
+    });
+  }, FEED_INTERVAL_MS);
+}
+
+wikiToggle.addEventListener('click',()=>{
+  feedPaused=!feedPaused;
+  wikiToggle.textContent=feedPaused?'Resume auto-feed':'Pause auto-feed';
+  updateFeedStatus();
+});
+wikiNow.addEventListener('click', async ()=>{
+  wikiNow.disabled=true; const o=wikiNow.textContent; wikiNow.textContent='Fetching…';
+  try{await ingestWikiBatch(25);}catch(e){console.warn(e);}
+  wikiNow.textContent=o; wikiNow.disabled=false;
+});
+bbcNow.addEventListener('click', async ()=>{
+  bbcNow.disabled=true; const o=bbcNow.textContent; bbcNow.textContent='Fetching BBC…';
+  try{await ingestBBC();}catch(e){console.warn(e);}
+  bbcNow.textContent=o; bbcNow.disabled=false;
+});
+ingestBtn.addEventListener('click', async ()=>{
+  const t=ingestTopic.value.trim(); if(!t) return;
+  ingestBtn.disabled=true; const o=ingestBtn.textContent; ingestBtn.textContent='Fetching…';
+  try{
+    // Wikipedia
+    if(srcWiki.checked){
+      const key='wikipedia:'+t;
+      if(!KB.titlesSeen.has(key)){
+        try{
+          const {title,extract}=await wikiSummary(t);
+          if(extract){
+            const chunks=chunkText(extract, 'wikipedia:'+title, title).map(c=>({...c, ts:Date.now()}));
+            if(chunks.length){ await KB.addBulk(chunks); feedStats.ok++; feedStats.bytes+=extract.length; feedStats.lastTitle=title; }
+          }
+        }catch{}
+      }
+    }
+    // Britannica
+    if(srcBrit.checked) await ingestBritannicaBatch([t]);
+    await enforceKbCap(); await refreshBytes(); refreshUsageUI(); updateFeedStatus();
+    ingestTopic.value='';
+  }catch(e){alert('Ingest failed: '+e.message);}
+  ingestBtn.textContent=o; ingestBtn.disabled=false;
+});
+ingestTopic.addEventListener('keydown', e=>{if(e.key==='Enter') ingestBtn.click();});
+
+window.addEventListener('online', updateFeedStatus);
+window.addEventListener('offline', updateFeedStatus);
+document.addEventListener('visibilitychange', updateFeedStatus);
+
+/* =========================================================================
+   KB SEARCH
+   ========================================================================= */
+function kbSearchRun(){
+  const q=kbSearch.value.trim(); kbResults.innerHTML='';
+  if(!q) return;
+  const {facts}=retrieve(q, 12);
+  if(!facts.length){ kbResults.innerHTML='<div class="meta">No matches in your local KB.</div>'; return; }
+  for(const e of facts){
+    const div=document.createElement('div'); div.className='kb-result';
+    div.innerHTML=`<div class="src">${escHtml(e.source||'')}</div>${escHtml(e.text.slice(0,500))}`;
+    kbResults.appendChild(div);
+  }
+}
+kbSearchBtn.addEventListener('click', kbSearchRun);
+kbSearch.addEventListener('keydown', e=>{if(e.key==='Enter') kbSearchRun();});
+
+/* =========================================================================
+   EXPORT
+   ========================================================================= */
+function download(name, text, mime='text/plain'){
+  const blob=new Blob([text],{type:mime}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),500);
+}
+exportJson.addEventListener('click',()=>download((CHATS.current?.title||'chat')+'.json', JSON.stringify(CHATS.current?.messages||[],null,2),'application/json'));
+exportMd.addEventListener('click',()=>{
+  const md=(CHATS.current?.messages||[]).map(m=>`**${m.role}**\n\n${m.content}\n`).join('\n---\n');
+  download((CHATS.current?.title||'chat')+'.md', md, 'text/markdown');
+});
+
+/* =========================================================================
+   CHAT MANAGEMENT (sidebar)
+   ========================================================================= */
+function renderChatList(){
+  chatList.innerHTML='';
+  for(const c of CHATS.index){
+    const row=document.createElement('div'); row.className='chat-item'+(CHATS.current?.id===c.id?' active':'');
+    row.innerHTML=`<span class="title">${escHtml(c.title||'Untitled')}</span><button class="del" title="Delete">🗑</button>`;
+    row.querySelector('.title').addEventListener('click', async ()=>{
+      await openChat(c.id);
+      if(isMobile()) sidebar.classList.remove('open');
+    });
+    row.querySelector('.del').addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      if(!confirm('Delete this chat?')) return;
+      await CHATS.remove(c.id);
+      if(CHATS.current?.id===c.id){
+        const next=CHATS.index[0];
+        if(next) await openChat(next.id);
+        else { const created=await CHATS.create(); await openChat(created.id); }
+      }
+      renderChatList();
+    });
+    chatList.appendChild(row);
+  }
+}
+function renderMessages(){
+  chat.querySelectorAll('.msg:not(.sys)').forEach(el=>el.remove());
+  if(!CHATS.current) return;
+  for(const m of CHATS.current.messages) addMsg(m.role==='user'?'user':'bot', m.content);
+}
+async function openChat(id){
+  await CHATS.open(id);
+  renderMessages(); renderChatList();
+}
+newChatBtn.addEventListener('click', async ()=>{
+  const c=await CHATS.create();
+  await openChat(c.id);
+});
+
+/* =========================================================================
+   STARTUP
+   ========================================================================= */
+(async ()=>{
+  try{
+    if(navigator.storage?.estimate){
+      const {quota=0, usage=0}=await navigator.storage.estimate();
+      availableMB=Math.max(0,(quota-usage)/1048576);
+      _bytesUsed=usage;
+      const quotaGB=quota/(1024**3);
+      storageHint.innerHTML=`Browser storage: <b>${availableMB.toFixed(0)} MB</b> free (quota ${quotaGB.toFixed(2)} GB) · WebGPU ${HAS_WEBGPU?'on':'off'} · ${ORT_THREADS}-thread WASM · OPFS ${OPFS_AVAILABLE?'on':'off'} · <span id="tokRate"></span>`;
+      if(navigator.storage.persist) await navigator.storage.persist().catch(()=>{});
+    } else storageHint.textContent='Storage API unavailable.';
+  }catch{}
+  await detectBackend();
+  renderHwChips();
+  await opfsInit();
+  await KB.load();
+  await KB.ensureSeed(false);
+  rebuildIndex();
+  await CHATS.load();
+  if(!CHATS.index.length){ const c=await CHATS.create(); await openChat(c.id); }
+  else await openChat(CHATS.index[0].id);
+  renderChatList();
+  refreshUsageUI();
+  buildModelOptions();
+  loadSettings();
+  setTimeout(()=>{updateFeedStatus(); scheduleFeedTick();}, 8000);
+  // Initial BBC headline pull so news questions work immediately.
+  if(srcBBC.checked && navigator.onLine) setTimeout(()=>ingestBBC().catch(()=>{}), 3000);
+})();
+
+/* =========================================================================
+   MEM CLEAR
+   ========================================================================= */
+memClear.addEventListener('click', async ()=>{
+  if(!confirm('Delete all chats, memory, and the local knowledge base? Cached model weights are kept.')) return;
+  await KB.wipeAll();
+  for(const c of [...CHATS.index]) await CHATS.remove(c.id);
+  CHATS.current=null;
+  await KB.ensureSeed(true);
+  rebuildIndex();
+  const c=await CHATS.create(); await openChat(c.id);
+  await refreshBytes(); refreshUsageUI();
+});
+kbReseed.addEventListener('click', async ()=>{
+  kbReseed.disabled=true; kbReseed.textContent='Re-seeding…';
+  await KB.ensureSeed(true); rebuildIndex();
+  await refreshBytes(); refreshUsageUI();
+  kbReseed.textContent='Re-seeded ✓'; setTimeout(()=>{kbReseed.textContent='Re-seed persona'; kbReseed.disabled=false;},1200);
+});
+
+/* =========================================================================
+   MODEL LOAD + GENERATE
+   ========================================================================= */
+let tokenizer=null, model=null, TextStreamer=null, Tensor=null;
+let StoppingCriteriaList=null, InterruptableStoppingCriteria=null, stopCriteria=null;
+let busy=false;
+let lastUserMessage='';
+
+loadBtn.addEventListener('click', async ()=>{
+  loadBtn.disabled=true; modelSel.disabled=true;
+  const modelId=modelSel.value;
+  const meta=MODELS.find(m=>m.id===modelId);
+  if(meta && meta.mb>availableMB-50){
+    if(!confirm(`This model needs ~${meta.mb} MB but only ${availableMB.toFixed(0)} MB is available. Continue?`)){
+      loadBtn.disabled=false; modelSel.disabled=false; return;
+    }
+  }
+  setStatus('Loading transformers.js…');
+  try{
+    const tjs=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0');
+    const {AutoTokenizer, AutoModelForCausalLM, TextStreamer:TS, env}=tjs;
+    Tensor=tjs.Tensor||(tjs.utils&&tjs.utils.Tensor)||(tjs.default&&tjs.default.Tensor);
+    if(!Tensor) throw new Error('Tensor class not found');
+    TextStreamer=TS;
+    StoppingCriteriaList=tjs.StoppingCriteriaList;
+    InterruptableStoppingCriteria=tjs.InterruptableStoppingCriteria;
+    env.allowLocalModels=false; env.useBrowserCache=true;
+    try{ const w=env?.backends?.onnx?.wasm; if(w){w.numThreads=ORT_THREADS; w.simd=true; w.proxy=ORT_THREADS>1;} }catch{}
+    if(typeof globalThis.Float16Array==='undefined'){
+      class F16 extends Uint16Array{} Object.defineProperty(F16,'name',{value:'Float16Array'}); globalThis.Float16Array=F16;
+    }
+    const {device:detected, f16:gpuF16}=await detectBackend();
+    const nativeF16=HAS_FLOAT16 && globalThis.Float16Array.toString().includes('[native code]');
+    const backend=nativeF16?detected:'wasm';
+    const candidates=[];
+    if(backend==='webgpu' && gpuF16 && nativeF16) candidates.push('q4f16','q4','q8','fp32');
+    else if(nativeF16) candidates.push('q4','q8','fp32');
+    else candidates.push('fp32','q8','q4');
+    const progressCb=(p)=>{
+      if(p.status==='progress' && p.total){
+        const pct=(p.loaded/p.total)*100;
+        bar.style.width=pct.toFixed(1)+'%';
+        setStatus(`Downloading ${p.file} — ${(p.loaded/1048576).toFixed(1)} / ${(p.total/1048576).toFixed(1)} MB`);
+      }
+    };
+    tokenizer=await AutoTokenizer.from_pretrained(modelId, {progress_callback:progressCb});
+    let chosenDtype=null, lastErr=null;
+    for(const dtype of candidates){
+      try{
+        setStatus(`Loading ${modelId.split('/').pop()} (${dtype}, ${backend.toUpperCase()})…`);
+        bar.style.width='0%';
+        model=await AutoModelForCausalLM.from_pretrained(modelId, {dtype, device:backend, progress_callback:progressCb});
+        chosenDtype=dtype; break;
+      }catch(err){
+        lastErr=err;
+        const m=String(err?.message||err).toLowerCase();
+        if(!m.includes('float16') && !m.includes('dtype') && !m.includes('unsupported')) throw err;
+      }
+    }
+    if(!chosenDtype) throw lastErr||new Error('All dtypes failed');
+    bar.style.width='100%';
+    setStatus(`Ready — ${backend.toUpperCase()} / ${chosenDtype} — offline`,'ready');
+    try{localStorage.setItem('ai:lastModel', modelId)}catch{}
+    loadBtn.remove();
+    input.disabled=false; sendBtn.disabled=false;
+    input.placeholder='Ask me anything…'; input.focus();
+  }catch(e){
+    console.error(e); setStatus('Failed: '+e.message,'err');
+    loadBtn.disabled=false; modelSel.disabled=false;
+  }
+});
+
+/* ---------- Online mode ---------- */
+let onlineMode=false, onlineAbort=null;
+const onlineToggle=$('onlineToggle');
+try{onlineMode=localStorage.getItem('ai:online')==='1'}catch{}
+onlineToggle.checked=onlineMode;
+function applyOnline(){
+  if(onlineMode){ input.disabled=false; sendBtn.disabled=false; input.placeholder='Ask me anything (online)…'; setStatus('Online mode','ready'); }
+  else if(!model){ input.disabled=true; sendBtn.disabled=true; input.placeholder='Load a model first…'; }
+  else { input.placeholder='Ask me anything…'; }
+}
+onlineToggle.addEventListener('change',()=>{onlineMode=onlineToggle.checked; try{localStorage.setItem('ai:online', onlineMode?'1':'0')}catch{} applyOnline();});
+applyOnline();
+
+async function generateOnline(userText, bubble){
+  const messages=buildMessages(userText);
+  onlineAbort=new AbortController();
+  const resp=await fetch('https://text.pollinations.ai/openai',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({messages, model:'openai-fast', stream:true, private:true, referrer:'offline-ai-chat'}),
+    signal:onlineAbort.signal,
+  });
+  if(!resp.ok||!resp.body) throw new Error('Online API '+resp.status);
+  const reader=resp.body.getReader(); const dec=new TextDecoder();
+  let acc='', buf='', tokCount=0; const t0=performance.now();
+  while(true){
+    const {value,done}=await reader.read(); if(done) break;
+    buf+=dec.decode(value,{stream:true});
+    let i;
+    while((i=buf.indexOf('\n'))>=0){
+      const line=buf.slice(0,i).trim(); buf=buf.slice(i+1);
+      if(!line.startsWith('data:')) continue;
+      const data=line.slice(5).trim();
+      if(data==='[DONE]'){ buf=''; break; }
+      try{
+        const j=JSON.parse(data);
+        const delta=j.choices?.[0]?.delta?.content||j.choices?.[0]?.message?.content||'';
+        if(delta){
+          acc+=delta; tokCount++;
+          bubble.textContent=acc; chat.scrollTop=chat.scrollHeight;
+          const dt=(performance.now()-t0)/1000;
+          const el=$('tokRate'); if(dt>.1 && el) el.textContent=`· ${(tokCount/dt).toFixed(1)} tok/s (online)`;
+        }
+      }catch{}
+    }
+  }
+  return acc.trim()||'(no response)';
+}
+
+async function generateLocal(userText, bubble){
+  let messages=buildMessages(userText);
+  let encoded=tokenizer.apply_chat_template(messages,{add_generation_prompt:true, return_dict:true});
+  const MAX_CTX=2048;
+  while(encoded.input_ids.dims[encoded.input_ids.dims.length-1]>MAX_CTX && messages.length>2){
+    const idx=messages.findIndex(m=>m.role!=='system');
+    if(idx<0) break;
+    messages.splice(idx,1);
+    encoded=tokenizer.apply_chat_template(messages,{add_generation_prompt:true, return_dict:true});
+  }
+  const input_ids=encoded.input_ids;
+  let attention_mask=encoded.attention_mask;
+  const seqLen=input_ids.dims[input_ids.dims.length-1];
+  const batch=input_ids.dims.length>1?input_ids.dims[0]:1;
+  if(!attention_mask){
+    const am=new BigInt64Array(batch*seqLen).fill(1n);
+    attention_mask=new Tensor('int64', am, [batch,seqLen]);
+  }
+  const posData=new BigInt64Array(batch*seqLen);
+  for(let b=0;b<batch;b++) for(let i=0;i<seqLen;i++) posData[b*seqLen+i]=BigInt(i);
+  const position_ids=new Tensor('int64', posData, [batch,seqLen]);
+
+  let acc='', tokCount=0; const t0=performance.now();
+  const streamer=new TextStreamer(tokenizer,{
+    skip_prompt:true, skip_special_tokens:true,
+    callback_function:(chunk)=>{
+      acc+=chunk; tokCount++;
+      const cut=acc.search(/\n(?:user|assistant|system)\s*[:\n]/i);
+      bubble.textContent=cut>=0?acc.slice(0,cut):acc;
+      chat.scrollTop=chat.scrollHeight;
+      const dt=(performance.now()-t0)/1000;
+      const el=$('tokRate'); if(dt>.1 && el) el.textContent=`· ${(tokCount/dt).toFixed(1)} tok/s`;
+    },
+  });
+  stopCriteria=InterruptableStoppingCriteria?new InterruptableStoppingCriteria():null;
+  const stopping_criteria=stopCriteria && StoppingCriteriaList?new StoppingCriteriaList([stopCriteria]):undefined;
+  await model.generate({
+    input_ids, attention_mask, position_ids,
+    max_new_tokens:GEN.max_new_tokens, do_sample:GEN.temperature>0,
+    temperature:GEN.temperature, top_p:GEN.top_p, top_k:GEN.top_k,
+    repetition_penalty:GEN.repetition_penalty,
+    streamer, stopping_criteria,
+  });
+  let reply=acc.trim();
+  const cut=reply.search(/\n(?:user|assistant|system)\s*[:\n]/i);
+  if(cut>=0) reply=reply.slice(0,cut).trim();
+  return reply||'(no response)';
+}
+
+function isSmallTalk(text){
+  const t=(text||'').toLowerCase().trim();
+  if(!t) return true;
+  return t.length<40 && /^(hi|hello|hey|yo|hiya|howdy|sup|good\s+(morning|afternoon|evening|night)|thanks|thank you|ty|thx|bye|goodbye|cya|see ya|ok|okay|cool|nice|lol|haha)[\s!.?]*$/i.test(t);
+}
+function looksLikeNews(text){
+  return /\b(news|latest|today|breaking|happened|happening|update|story|headline|current|recent)\b/i.test(text||'');
+}
+
+async function liveGrounding(text){
+  const facts=[]; const tasks=[];
+  const limit=GEN.live_snippets;
+  if(srcWiki.checked) tasks.push(wikiSearch(text, Math.min(3,limit)).catch(()=>[]));
+  if(srcBrit.checked) tasks.push(britannicaLookup(text).catch(()=>[]));
+  if(srcBBC.checked && looksLikeNews(text)) tasks.push(bbcLookup(text, Math.min(3,limit)).catch(()=>[]));
+  else if(srcBBC.checked) tasks.push(bbcLookup(text, 1).catch(()=>[]));
+  const results=await Promise.all(tasks);
+  for(const arr of results) for(const f of arr){ if(facts.length<limit && f) facts.push(f); }
+  return facts;
+}
+
+async function send(userTextOverride){
+  if(busy) return;
+  if(!onlineMode && !model) return;
+  let text=(userTextOverride??input.value).trim(); if(!text) return; if(text.length>8000) text=text.slice(0,8000);
+  if(!userTextOverride){ input.value=''; input.style.height='auto'; }
+  if(!CHATS.current) CHATS.current=await CHATS.create();
+  addMsg('user', text);
+  CHATS.current.messages.push({role:'user', content:text});
+  // Auto-title from first user message.
+  if(CHATS.current.messages.filter(m=>m.role==='user').length===1){
+    CHATS.current.title=text.slice(0,40).replace(/\s+/g,' ')||'New chat';
+    renderChatList();
+  }
+  lastUserMessage=text;
+  busy=true; sendBtn.disabled=true; input.disabled=true; stopBtn.style.display='';
+  const bubble=addMsg('bot',''); bubble.classList.add('cursor');
+  try{
+    LIVE_FACTS=[];
+    if(!isSmallTalk(text) && GEN.live_snippets>0){
+      bubble.textContent='Looking up live sources…';
+      try{ LIVE_FACTS=await liveGrounding(text); }catch(e){console.warn('grounding',e);}
+      bubble.textContent='';
+    }
+    const reply=await (onlineMode?generateOnline(text,bubble):generateLocal(text,bubble));
+    bubble.textContent=reply;
+    CHATS.current.messages.push({role:'assistant', content:reply});
+    await CHATS.save();
+    await refreshBytes(); refreshUsageUI();
+  }catch(e){console.error(e); bubble.textContent='Error: '+e.message;}
+  finally{
+    bubble.classList.remove('cursor');
+    busy=false; sendBtn.disabled=false; input.disabled=false; stopBtn.style.display='none';
+    stopCriteria=null; input.focus();
+  }
+}
+
+stopBtn.addEventListener('click',()=>{try{stopCriteria?.interrupt?.()}catch{} try{onlineAbort?.abort?.()}catch{}});
+regenBtn.addEventListener('click', async ()=>{
+  if(busy || (!model && !onlineMode) || !lastUserMessage || !CHATS.current) return;
+  // Pop last assistant + last user from messages
+  const msgs=CHATS.current.messages;
+  for(let i=msgs.length-1;i>=0;i--) if(msgs[i].role==='assistant'){msgs.splice(i,1); break;}
+  for(let i=msgs.length-1;i>=0;i--) if(msgs[i].role==='user'){msgs.splice(i,1); break;}
+  const bots=chat.querySelectorAll('.msg.bot'); if(bots.length) bots[bots.length-1].remove();
+  const users=chat.querySelectorAll('.msg.user'); if(users.length) users[users.length-1].remove();
+  await send(lastUserMessage);
+});
+
+sendBtn.addEventListener('click',()=>send());
+input.addEventListener('keydown',(e)=>{if(e.key==='Enter' && !e.shiftKey){e.preventDefault(); send();}});
+input.addEventListener('input',()=>{input.style.height='auto'; input.style.height=Math.min(160,input.scrollHeight)+'px';});
+
+setInterval(()=>refreshBytes().then(refreshUsageUI), 30000);
+</script>
+</body>
+</html>
