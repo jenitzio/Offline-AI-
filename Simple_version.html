@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ocean Chat — Offline AI</title>
+<style>
+  :root {
+    --ocean-1: #021024;
+    --ocean-2: #052b5f;
+    --ocean-3: #0a4d8c;
+    --ocean-4: #1d8acb;
+    --foam:   #b8e6ff;
+    --text:   #eaf6ff;
+    --muted:  #9cc7e8;
+    --glass:  rgba(255,255,255,0.08);
+    --glass-2:rgba(255,255,255,0.14);
+    --border: rgba(184,230,255,0.22);
+    --user:   linear-gradient(135deg,#1d8acb,#0a4d8c);
+    --bot:    rgba(255,255,255,0.10);
+    --accent: #5ee0c1;
+    --warn:   #ffb454;
+    --err:    #ff6b81;
+    --radius: 18px;
+    --shadow: 0 20px 50px -20px rgba(0,0,0,.55);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    color: var(--text);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    background:
+      radial-gradient(1000px 600px at 15% -10%, rgba(94,224,193,.18), transparent 60%),
+      radial-gradient(1100px 700px at 110% 10%, rgba(29,138,203,.30), transparent 55%),
+      radial-gradient(900px 700px at 50% 120%, rgba(10,77,140,.55), transparent 60%),
+      linear-gradient(180deg, var(--ocean-1), var(--ocean-2) 60%, #03132e);
+    background-attachment: fixed;
+    display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  /* Animated soft caustics */
+  body::before {
+    content:""; position: fixed; inset: -20%; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(600px 400px at 30% 40%, rgba(94,224,193,.12), transparent 60%),
+      radial-gradient(500px 350px at 70% 60%, rgba(29,138,203,.18), transparent 60%);
+    filter: blur(40px);
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    0%   { transform: translate3d(0,0,0) scale(1); }
+    100% { transform: translate3d(40px,-30px,0) scale(1.08); }
+  }
+
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  header {
+    position: relative; z-index: 2;
+    margin: 14px 14px 0;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  header h1 {
+    margin: 0; font-size: 17px; font-weight: 700; letter-spacing: .3px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  header h1 .wave { font-size: 20px; }
+  .status {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12.5px; color: var(--muted);
+    padding: 4px 10px; border-radius: 999px;
+    background: rgba(255,255,255,.06); border: 1px solid var(--border);
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--warn);
+    box-shadow: 0 0 0 4px rgba(255,180,84,.18);
+  }
+  .dot.ready { background: var(--accent); box-shadow: 0 0 0 4px rgba(94,224,193,.20); }
+  .dot.err   { background: var(--err);    box-shadow: 0 0 0 4px rgba(255,107,129,.20); }
+  .spacer { flex: 1; }
+  .icon-btn {
+    background: var(--glass); color: var(--text);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 8px 12px; font-size: 14px; cursor: pointer;
+    transition: transform .15s ease, background .2s ease;
+  }
+  .icon-btn:hover { background: var(--glass-2); transform: translateY(-1px); }
+
+  .progress {
+    position: relative; z-index: 2;
+    margin: 10px 14px 0; height: 4px;
+    background: rgba(255,255,255,.06); border-radius: 999px; overflow: hidden;
+  }
+  .progress > div {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--ocean-4), var(--accent));
+    transition: width .25s ease;
+  }
+
+  main {
+    position: relative; z-index: 1;
+    flex: 1; min-height: 0;
+    margin: 14px; padding: 18px;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .msg { display: flex; }
+  .msg.user { justify-content: flex-end; }
+  .bubble {
+    max-width: min(720px, 86%);
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(12px) saturate(140%);
+    line-height: 1.55;
+    white-space: pre-wrap; word-wrap: break-word;
+    animation: rise .25s ease;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .msg.bot .bubble  { background: var(--bot); border-top-left-radius: 4px; }
+  .msg.user .bubble { background: var(--user); border-color: rgba(255,255,255,.25); border-top-right-radius: 4px; color: #fff; }
+  .msg.sys .bubble  {
+    background: rgba(94,224,193,.10);
+    border: 1px dashed rgba(94,224,193,.45);
+    color: var(--foam); font-size: 13.5px;
+  }
+  .role {
+    font-size: 11px; color: var(--muted); margin-bottom: 4px;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  footer {
+    position: relative; z-index: 2;
+    margin: 0 14px 14px; padding: 12px;
+  }
+  .composer { display: flex; gap: 10px; align-items: flex-end; }
+  textarea {
+    flex: 1; resize: none; min-height: 48px; max-height: 200px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid var(--border);
+    color: var(--text); font: inherit;
+    border-radius: 14px; outline: none;
+    transition: border-color .2s ease, background .2s ease;
+  }
+  textarea:focus { border-color: rgba(94,224,193,.6); background: rgba(255,255,255,.10); }
+  textarea:disabled { opacity: .55; cursor: not-allowed; }
+  .btn {
+    border: 1px solid var(--border);
+    color: #fff; font-weight: 600; cursor: pointer;
+    padding: 12px 18px; border-radius: 14px;
+    transition: transform .15s ease, box-shadow .2s ease, opacity .2s;
+    background: linear-gradient(135deg, var(--ocean-4), var(--ocean-3));
+    box-shadow: 0 8px 24px -10px rgba(29,138,203,.7);
+  }
+  .btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 28px -10px rgba(29,138,203,.9); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.stop { background: linear-gradient(135deg,#ff6b81,#b23048); box-shadow: 0 8px 24px -10px rgba(255,107,129,.6); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 8px; text-align: center; }
+
+  /* Modal */
+  .modal-bg {
+    position: fixed; inset: 0; z-index: 99;
+    background: rgba(2,16,36,.65);
+    backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-bg.open { display: flex; animation: fade .2s ease; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    max-width: 520px; width: 100%;
+    padding: 26px 24px;
+  }
+  .modal h2 { margin: 0 0 10px; font-size: 20px; }
+  .modal p  { margin: 8px 0; color: var(--foam); font-size: 14px; line-height: 1.6; }
+  .modal ul { margin: 8px 0; padding-left: 20px; color: var(--foam); font-size: 14px; line-height: 1.7; }
+  .modal .actions { display: flex; justify-content: flex-end; margin-top: 16px; }
+
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
+
+  @media (max-width: 600px) {
+    header { gap: 8px; padding: 10px 12px; }
+    header h1 { font-size: 15px; }
+    main { margin: 10px; padding: 14px; }
+    .bubble { max-width: 92%; }
+  }
+</style>
+</head>
+<body>
+
+<header class="glass">
+  <h1><span class="wave">🌊</span> Ocean Chat</h1>
+  <span class="status"><span class="dot" id="dot"></span><span id="status">Ready to load</span></span>
+  <span class="spacer"></span>
+  <button class="icon-btn" id="aboutBtn" title="About">ℹ️ About</button>
+  <button class="icon-btn" id="loadBtn">⬇️ Load model</button>
+  <button class="icon-btn" id="clearBtn" title="Clear chat">🗑️</button>
+</header>
+
+<div class="progress"><div id="bar"></div></div>
+
+<main id="chat">
+  <div class="msg sys"><div class="bubble">
+    Welcome aboard 🌊 Click <b>⬇️ Load model</b> to download <b>SmolLM2 135M</b> (~110&nbsp;MB) once.
+    After that, everything runs <b>fully offline</b> in your browser.
+  </div></div>
+</main>
+
+<footer class="glass">
+  <div class="composer">
+    <textarea id="input" placeholder="Load the model to start chatting…" disabled rows="1"></textarea>
+    <button class="btn" id="send" disabled>Send</button>
+    <button class="btn stop" id="stop" style="display:none;">Stop</button>
+  </div>
+  <div class="hint" id="hint">Tip: Press <b>Enter</b> to send, <b>Shift+Enter</b> for a new line.</div>
+</footer>
+
+<!-- About modal -->
+<div class="modal-bg" id="aboutBg">
+  <div class="modal glass">
+    <h2>🌊 About Ocean Chat</h2>
+    <p>Ocean Chat is a tiny AI assistant that runs <b>entirely in your browser</b>. No accounts, no servers, no tracking.</p>
+    <p><b>What happens when you click "Load model"?</b></p>
+    <ul>
+      <li>Your browser downloads <b>SmolLM2 135M Instruct</b> from Hugging Face — about <b>110&nbsp;MB</b>.</li>
+      <li>The model is <b>cached locally</b> (in your browser's storage), so it only downloads once.</li>
+      <li>After loading, you can <b>disconnect from the internet</b> — chats run offline on your device.</li>
+      <li>Nothing you type ever leaves your computer.</li>
+    </ul>
+    <p>Powered by <a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener" style="color:var(--accent)">Transformers.js</a>.</p>
+    <div class="actions">
+      <button class="btn" id="aboutClose">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import {
+    AutoTokenizer, AutoModelForCausalLM, TextStreamer, InterruptableStoppingCriteria
+  } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2";
+
+  const MODEL_ID = "HuggingFaceTB/SmolLM2-135M-Instruct";
+
+  const $ = (id) => document.getElementById(id);
+  const dot = $('dot'), statusEl = $('status'), bar = $('bar'), chat = $('chat');
+  const input = $('input'), sendBtn = $('send'), stopBtn = $('stop'), hint = $('hint');
+  const loadBtn = $('loadBtn'), clearBtn = $('clearBtn');
+  const aboutBtn = $('aboutBtn'), aboutBg = $('aboutBg'), aboutClose = $('aboutClose');
+
+  function setStatus(text, cls) {
+    statusEl.textContent = text;
+    dot.className = 'dot' + (cls ? ' ' + cls : '');
+  }
+  function addMsg(role, text) {
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ' + role;
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    b.textContent = text;
+    wrap.appendChild(b);
+    chat.appendChild(wrap);
+    chat.scrollTop = chat.scrollHeight;
+    return b;
+  }
+
+  // About modal
+  aboutBtn.onclick = () => aboutBg.classList.add('open');
+  aboutClose.onclick = () => aboutBg.classList.remove('open');
+  aboutBg.onclick = (e) => { if (e.target === aboutBg) aboutBg.classList.remove('open'); };
+
+  // Clear chat
+  clearBtn.onclick = () => {
+    [...chat.querySelectorAll('.msg')].forEach((m,i) => { if (i>0) m.remove(); });
+    history = [];
+  };
+
+  // Auto-grow textarea
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 200) + 'px';
+  });
+
+  let tokenizer = null, model = null, loading = false;
+  let history = [];
+  let stopping = null;
+
+  async function loadModel() {
+    if (loading || model) return;
+    loading = true;
+    loadBtn.disabled = true;
+    setStatus('Downloading… (first time only)', '');
+    bar.style.width = '2%';
+
+    const progressCb = (p) => {
+      if (p && p.status === 'progress' && p.progress != null) {
+        bar.style.width = Math.max(2, p.progress) + '%';
+        setStatus(`Downloading ${p.file?.split('/').pop() || 'model'} — ${p.progress.toFixed(0)}%`);
+      } else if (p && p.status === 'done') {
+        bar.style.width = '100%';
+      }
+    };
+
+    try {
+      tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID, { progress_callback: progressCb });
+      setStatus('Loading model into memory…');
+      // try webgpu first, fallback to wasm
+      try {
+        model = await AutoModelForCausalLM.from_pretrained(MODEL_ID, {
+          dtype: 'q4', device: 'webgpu', progress_callback: progressCb
+        });
+      } catch {
+        model = await AutoModelForCausalLM.from_pretrained(MODEL_ID, {
+          dtype: 'q8', device: 'wasm', progress_callback: progressCb
+        });
+      }
+      bar.style.width = '100%';
+      setTimeout(() => bar.style.width = '0%', 700);
+      setStatus('Ready — chat offline', 'ready');
+      input.disabled = false; sendBtn.disabled = false;
+      input.placeholder = 'Type your message…';
+      loadBtn.style.display = 'none';
+      input.focus();
+    } catch (e) {
+      console.error(e);
+      setStatus('Failed to load — check connection', 'err');
+      loadBtn.disabled = false;
+      bar.style.width = '0%';
+    } finally {
+      loading = false;
+    }
+  }
+
+  loadBtn.onclick = loadModel;
+
+  async function send() {
+    const text = input.value.trim();
+    if (!text || !model) return;
+    addMsg('user', text);
+    history.push({ role: 'user', content: text });
+    input.value = ''; input.style.height = 'auto';
+    input.disabled = true; sendBtn.disabled = true;
+    stopBtn.style.display = '';
+
+    const botBubble = addMsg('bot', '');
+    let acc = '';
+
+    stopping = new InterruptableStoppingCriteria();
+
+    const messages = [
+      { role: 'system', content: 'You are Ocean, a friendly and concise AI assistant running locally in the user\'s browser.' },
+      ...history
+    ];
+
+    const inputs = tokenizer.apply_chat_template(messages, {
+      add_generation_prompt: true, return_dict: true
+    });
+
+    const streamer = new TextStreamer(tokenizer, {
+      skip_prompt: true,
+      skip_special_tokens: true,
+      callback_function: (t) => {
+        acc += t;
+        botBubble.textContent = acc;
+        chat.scrollTop = chat.scrollHeight;
+      }
+    });
+
+    try {
+      await model.generate({
+        ...inputs,
+        max_new_tokens: 256,
+        do_sample: true,
+        temperature: 0.7,
+        top_p: 0.9,
+        repetition_penalty: 1.15,
+        streamer,
+        stopping_criteria: stopping
+      });
+      history.push({ role: 'assistant', content: acc.trim() });
+    } catch (e) {
+      console.error(e);
+      botBubble.textContent = acc || '⚠️ Something went wrong.';
+    } finally {
+      stopBtn.style.display = 'none';
+      input.disabled = false; sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  sendBtn.onclick = send;
+  stopBtn.onclick = () => { if (stopping) stopping.interrupt(); };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+</script>
+</body>
+</html>
