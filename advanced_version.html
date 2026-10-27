@@ -5,227 +5,626 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Offline AI Chat — Wikipedia · Britannica · BBC News</title>
 <style>
-  /* ================= Ocean Glassmorphic Theme ================= */
-  :root {
-    --bg:#02060f; --bg-2:#03142b; --bg-3:#062a52;
-    --panel:rgba(13,38,73,.45); --panel-2:rgba(20,55,100,.35); --panel-solid:#0a1f3d;
-    --border:rgba(120,190,255,.18); --border-strong:rgba(140,210,255,.35);
-    --text:#eaf4ff; --muted:#9bb6d6; --muted-2:#6a86a8;
-    --user:#2f8bff; --user-2:#1463d6; --bot:rgba(255,255,255,.06);
-    --accent:#38e0d4; --accent-2:#06b6d4; --warn:#fbbf24; --err:#ef4444;
-    --radius:16px;
-    --shadow:0 12px 40px -10px rgba(0,50,120,.55), 0 2px 8px rgba(0,0,0,.25);
-    --glass-blur:saturate(160%) blur(18px);
+  /* ============ iOS 26 "Liquid Glass" Theme ============ */
+  :root{
+    /* Vibrant iOS 26 wallpaper palette */
+    --hue-1:#ff4d8d;   /* fuchsia pink */
+    --hue-2:#9d4dff;   /* electric purple */
+    --hue-3:#4d8dff;   /* sky blue */
+    --hue-4:#4de0ff;   /* aqua cyan */
+    --hue-5:#ffb84d;   /* warm amber */
+
+    --bg:#05060a;
+    --text:#f5f7ff;
+    --text-strong:#ffffff;
+    --muted:rgba(235,240,255,.62);
+    --muted-2:rgba(235,240,255,.38);
+
+    /* Liquid glass surfaces */
+    --glass:rgba(255,255,255,.08);
+    --glass-2:rgba(255,255,255,.12);
+    --glass-3:rgba(255,255,255,.18);
+    --glass-solid:#11131c;
+    --stroke:rgba(255,255,255,.14);
+    --stroke-strong:rgba(255,255,255,.28);
+    --inner-light:inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(255,255,255,.06);
+
+    --user:#0a84ff;          /* iOS systemBlue */
+    --user-2:#0066ff;
+    --bot:rgba(255,255,255,.06);
+    --accent:#30d5c8;        /* iOS tealish */
+    --accent-2:#64d2ff;
+    --warn:#ffd60a;
+    --err:#ff453a;
+    --ok:#30d158;
+
+    --radius:22px;
+    --radius-sm:14px;
+    --radius-lg:28px;
+    --shadow-soft:0 10px 40px -12px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.25);
+    --shadow-pop:0 24px 60px -16px rgba(0,0,0,.7), 0 4px 14px rgba(0,0,0,.35);
+    --blur:saturate(180%) blur(28px);
+    --blur-strong:saturate(200%) blur(40px);
   }
   html[data-theme="light"]{
-    --bg:#d9efff; --bg-2:#aedbff; --bg-3:#7cc4ff;
-    --panel:rgba(255,255,255,.55); --panel-2:rgba(255,255,255,.4); --panel-solid:#fff;
-    --border:rgba(30,100,170,.2); --border-strong:rgba(30,100,170,.4);
-    --text:#052036; --muted:#3d6790; --muted-2:#7898b8; --bot:rgba(255,255,255,.7);
-    --shadow:0 12px 40px -10px rgba(20,80,160,.25);
+    --bg:#eef3ff;
+    --text:#0a0d14;
+    --text-strong:#000;
+    --muted:rgba(20,25,40,.62);
+    --muted-2:rgba(20,25,40,.4);
+    --glass:rgba(255,255,255,.55);
+    --glass-2:rgba(255,255,255,.7);
+    --glass-3:rgba(255,255,255,.85);
+    --glass-solid:#ffffff;
+    --stroke:rgba(10,15,30,.1);
+    --stroke-strong:rgba(10,15,30,.22);
+    --bot:rgba(255,255,255,.6);
+    --inner-light:inset 0 1px 0 rgba(255,255,255,.85), inset 0 -1px 0 rgba(10,15,30,.04);
+    --shadow-soft:0 10px 40px -16px rgba(20,40,90,.25);
+    --shadow-pop:0 22px 50px -18px rgba(20,40,90,.3);
   }
   @media (prefers-color-scheme: light){
     html[data-theme="auto"]{
-      --bg:#d9efff; --bg-2:#aedbff; --bg-3:#7cc4ff;
-      --panel:rgba(255,255,255,.55); --panel-2:rgba(255,255,255,.4); --panel-solid:#fff;
-      --border:rgba(30,100,170,.2); --border-strong:rgba(30,100,170,.4);
-      --text:#052036; --muted:#3d6790; --muted-2:#7898b8; --bot:rgba(255,255,255,.7);
-      --shadow:0 12px 40px -10px rgba(20,80,160,.25);
+      --bg:#eef3ff;
+      --text:#0a0d14; --text-strong:#000;
+      --muted:rgba(20,25,40,.62); --muted-2:rgba(20,25,40,.4);
+      --glass:rgba(255,255,255,.55); --glass-2:rgba(255,255,255,.7); --glass-3:rgba(255,255,255,.85);
+      --glass-solid:#ffffff;
+      --stroke:rgba(10,15,30,.1); --stroke-strong:rgba(10,15,30,.22);
+      --bot:rgba(255,255,255,.6);
+      --inner-light:inset 0 1px 0 rgba(255,255,255,.85), inset 0 -1px 0 rgba(10,15,30,.04);
+      --shadow-soft:0 10px 40px -16px rgba(20,40,90,.25);
+      --shadow-pop:0 22px 50px -18px rgba(20,40,90,.3);
     }
   }
+
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
   body{
-    background:
-      radial-gradient(1400px 700px at 15% -10%, rgba(56,224,212,.18), transparent 60%),
-      radial-gradient(1200px 600px at 90% 10%, rgba(47,139,255,.22), transparent 65%),
-      radial-gradient(900px 500px at 50% 110%, rgba(6,182,212,.18), transparent 60%),
-      linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
-    background-attachment:fixed;
     color:var(--text);
-    font:15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+    font:15px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Inter, Roboto, sans-serif;
     -webkit-font-smoothing:antialiased;
     overflow:hidden;
+    background:var(--bg);
+    position:relative;
   }
-  .app{display:grid; grid-template-columns:260px 1fr; height:100vh;}
-  @media (max-width:760px){ .app{grid-template-columns:1fr;} .sidebar{position:fixed;left:-280px;top:0;bottom:0;width:260px;z-index:50;transition:left .25s;} .sidebar.open{left:0;} }
+  /* Animated wallpaper "blobs" — the heart of the iOS 26 look */
+  body::before{
+    content:""; position:fixed; inset:-20%; z-index:-2;
+    background:
+      radial-gradient(40vmax 40vmax at 15% 20%, var(--hue-1) 0%, transparent 55%),
+      radial-gradient(45vmax 45vmax at 85% 10%, var(--hue-2) 0%, transparent 60%),
+      radial-gradient(50vmax 50vmax at 80% 90%, var(--hue-3) 0%, transparent 60%),
+      radial-gradient(40vmax 40vmax at 10% 95%, var(--hue-4) 0%, transparent 55%),
+      radial-gradient(35vmax 35vmax at 50% 50%, var(--hue-5) 0%, transparent 60%),
+      linear-gradient(180deg, #0a0a18 0%, #05060a 100%);
+    filter:saturate(120%);
+    animation:driftA 28s ease-in-out infinite alternate;
+  }
+  body::after{
+    /* Subtle film grain + vignette to ground the glass */
+    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(120% 80% at 50% 50%, transparent 55%, rgba(0,0,0,.45) 100%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.045 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  html[data-theme="light"] body::before{
+    background:
+      radial-gradient(40vmax 40vmax at 15% 20%, #ff8fb1 0%, transparent 55%),
+      radial-gradient(45vmax 45vmax at 85% 10%, #b69cff 0%, transparent 60%),
+      radial-gradient(50vmax 50vmax at 80% 90%, #8fbfff 0%, transparent 60%),
+      radial-gradient(40vmax 40vmax at 10% 95%, #8ff0ff 0%, transparent 55%),
+      radial-gradient(35vmax 35vmax at 50% 50%, #ffd9a8 0%, transparent 60%),
+      linear-gradient(180deg, #eaf0ff 0%, #d8e2ff 100%);
+  }
+  @keyframes driftA{
+    0%{transform:translate3d(0,0,0) rotate(0deg) scale(1)}
+    50%{transform:translate3d(2%,-1%,0) rotate(8deg) scale(1.06)}
+    100%{transform:translate3d(-2%,1%,0) rotate(-6deg) scale(1.04)}
+  }
+
+  .app{display:grid; grid-template-columns:280px 1fr; height:100vh; padding:14px; gap:14px;}
+  @media (max-width:760px){
+    .app{grid-template-columns:1fr; padding:8px; gap:8px;}
+    .sidebar{position:fixed; left:-300px; top:8px; bottom:8px; width:280px; z-index:50; transition:left .3s cubic-bezier(.2,.8,.2,1);}
+    .sidebar.open{left:8px;}
+  }
+
+  /* ==== Liquid Glass primitives ==== */
+  .glass{
+    background:var(--glass);
+    -webkit-backdrop-filter:var(--blur);
+    backdrop-filter:var(--blur);
+    border:1px solid var(--stroke);
+    box-shadow:var(--shadow-soft), var(--inner-light);
+  }
 
   /* Sidebar */
   .sidebar{
-    background:var(--panel); -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
-    border-right:1px solid var(--border); display:flex; flex-direction:column; min-height:0;
+    background:var(--glass);
+    -webkit-backdrop-filter:var(--blur-strong);
+    backdrop-filter:var(--blur-strong);
+    border:1px solid var(--stroke);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-soft), var(--inner-light);
+    display:flex; flex-direction:column; min-height:0; overflow:hidden;
   }
-  .sidebar header{padding:14px; border-bottom:1px solid var(--border); display:flex; gap:8px; align-items:center;}
-  .sidebar h2{font-size:13px; margin:0; color:var(--muted); font-weight:600; letter-spacing:.5px; text-transform:uppercase; flex:1;}
-  .sidebar .chats{flex:1; overflow-y:auto; padding:8px;}
+  .sidebar header{padding:16px 18px; border-bottom:1px solid var(--stroke); display:flex; gap:8px; align-items:center;}
+  .sidebar h2{font-size:11px; margin:0; color:var(--muted); font-weight:700; letter-spacing:1.2px; text-transform:uppercase; flex:1;}
+  .sidebar .chats{flex:1; overflow-y:auto; padding:10px;}
   .chat-item{
-    display:flex; align-items:center; gap:6px; padding:9px 11px; border-radius:10px; cursor:pointer;
-    color:var(--text); font-size:13.5px; border:1px solid transparent; margin-bottom:3px;
-    transition:background .15s, border-color .15s;
+    display:flex; align-items:center; gap:6px; padding:11px 13px; border-radius:14px; cursor:pointer;
+    color:var(--text); font-size:13.5px; border:1px solid transparent; margin-bottom:4px;
+    transition:background .2s, border-color .2s, transform .15s;
   }
-  .chat-item:hover{background:var(--panel-2); border-color:var(--border);}
-  .chat-item.active{background:var(--panel-2); border-color:var(--border-strong); box-shadow:0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent) inset;}
+  .chat-item:hover{background:var(--glass-2); border-color:var(--stroke); transform:translateX(2px);}
+  .chat-item.active{
+    background:linear-gradient(135deg, rgba(10,132,255,.22), rgba(100,210,255,.14));
+    border-color:rgba(100,210,255,.45);
+    box-shadow:0 6px 18px -8px rgba(10,132,255,.55), var(--inner-light);
+  }
   .chat-item .title{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .chat-item .del{opacity:0; background:transparent; border:0; color:var(--muted); cursor:pointer; font-size:14px; padding:2px 4px; border-radius:6px;}
+  .chat-item .del{opacity:0; background:transparent; border:0; color:var(--muted); cursor:pointer; font-size:14px; padding:3px 6px; border-radius:8px;}
   .chat-item:hover .del{opacity:1;}
-  .chat-item .del:hover{color:var(--err); background:rgba(239,68,68,.1);}
-  .new-chat{margin:8px; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:600; font-size:13px;
-    background:linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); color:#042027; border:0;
-    box-shadow:0 6px 16px -6px rgba(56,224,212,.55), inset 0 1px 0 rgba(255,255,255,.4);}
-  .new-chat:hover{filter:brightness(1.08);}
-  .sidebar-footer{padding:10px 14px; border-top:1px solid var(--border); font-size:11px; color:var(--muted-2);}
+  .chat-item .del:hover{color:var(--err); background:rgba(255,69,58,.14);}
+  .new-chat{
+    margin:10px; padding:12px 14px; border-radius:16px; cursor:pointer; font-weight:600; font-size:13.5px;
+    background:linear-gradient(135deg, var(--user) 0%, #5e5cff 60%, #c44dff 100%);
+    color:#fff; border:0;
+    box-shadow:0 10px 24px -8px rgba(94,92,255,.65), inset 0 1px 0 rgba(255,255,255,.4);
+    transition:transform .15s, filter .2s;
+  }
+  .new-chat:hover{filter:brightness(1.1); transform:translateY(-1px);}
+  .sidebar-footer{padding:12px 16px; border-top:1px solid var(--stroke); font-size:11px; color:var(--muted-2);}
 
   /* Main column */
-  .main-col{display:flex; flex-direction:column; min-width:0; min-height:0;}
+  .main-col{
+    display:flex; flex-direction:column; min-width:0; min-height:0;
+    background:var(--glass);
+    -webkit-backdrop-filter:var(--blur-strong);
+    backdrop-filter:var(--blur-strong);
+    border:1px solid var(--stroke);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-soft), var(--inner-light);
+    overflow:hidden;
+  }
   header.top{
-    padding:10px 16px; border-bottom:1px solid var(--border);
+    padding:12px 18px; border-bottom:1px solid var(--stroke);
     display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-    background:var(--panel); -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+    background:linear-gradient(180deg, var(--glass-2), transparent);
+    -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
     position:sticky; top:0; z-index:10;
   }
   header.top h1{
-    font-size:16px; margin:0; font-weight:700; letter-spacing:.3px;
-    background:linear-gradient(135deg,#eaf4ff 0%,#7dd3fc 50%,#38e0d4 100%);
+    font-size:16px; margin:0; font-weight:700; letter-spacing:-.2px;
+    background:linear-gradient(135deg, #fff 0%, #c2e9ff 40%, #ff9dd6 100%);
     -webkit-background-clip:text; background-clip:text; color:transparent;
-    background-size:200% 200%; animation:shimmer 6s ease-in-out infinite;
+    background-size:220% 220%; animation:shimmer 8s ease-in-out infinite;
   }
   @keyframes shimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
   .status{font-size:12px; color:var(--muted);}
   .dot{
-    width:10px; height:10px; border-radius:50%; background:var(--warn);
-    box-shadow:0 0 0 4px color-mix(in oklab,var(--warn) 20%,transparent), 0 0 12px var(--warn);
+    width:9px; height:9px; border-radius:50%; background:var(--warn);
+    box-shadow:0 0 0 4px color-mix(in oklab,var(--warn) 20%,transparent), 0 0 14px var(--warn);
     animation:pulse-dot 2s ease-in-out infinite;
   }
-  .dot.ready{background:var(--accent); box-shadow:0 0 0 4px color-mix(in oklab,var(--accent) 25%,transparent), 0 0 14px var(--accent);}
-  .dot.err{background:var(--err); box-shadow:0 0 0 4px color-mix(in oklab,var(--err) 25%,transparent), 0 0 14px var(--err);}
-  @keyframes pulse-dot{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.15);filter:brightness(1.3)}}
+  .dot.ready{background:var(--ok); box-shadow:0 0 0 4px color-mix(in oklab,var(--ok) 25%,transparent), 0 0 16px var(--ok);}
+  .dot.err{background:var(--err); box-shadow:0 0 0 4px color-mix(in oklab,var(--err) 25%,transparent), 0 0 16px var(--err);}
+  @keyframes pulse-dot{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
   .hw-chips{display:flex; gap:6px; flex-wrap:wrap;}
   .chip{
-    font-size:11px; padding:4px 10px; border-radius:999px;
-    background:var(--panel-2); border:1px solid var(--border); color:var(--muted);
-    display:inline-flex; align-items:center; gap:4px;
+    font-size:11px; padding:5px 11px; border-radius:999px;
+    background:var(--glass-2); border:1px solid var(--stroke); color:var(--muted);
+    display:inline-flex; align-items:center; gap:5px;
+    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+    box-shadow:var(--inner-light);
   }
-  .chip.on{color:var(--accent); border-color:color-mix(in oklab,var(--accent) 50%,var(--border));}
+  .chip.on{color:#7ef7ec; border-color:rgba(48,213,200,.5); background:rgba(48,213,200,.12);}
   .chip.off{color:var(--muted-2);}
 
   /* Messages */
-  main{flex:1; overflow-y:auto; padding:22px 18px 28px; max-width:880px; width:100%; margin:0 auto; scroll-behavior:smooth;}
-  .msg{margin:14px 0; display:flex; animation:rise .4s cubic-bezier(.2,.8,.2,1) both;}
-  @keyframes rise{from{opacity:0; transform:translateY(12px) scale(.98); filter:blur(3px)} to{opacity:1; transform:none; filter:blur(0)}}
+  main{flex:1; overflow-y:auto; padding:24px 22px 28px; max-width:900px; width:100%; margin:0 auto; scroll-behavior:smooth;}
+  .msg{margin:14px 0; display:flex; animation:rise .45s cubic-bezier(.2,.9,.2,1) both;}
+  @keyframes rise{from{opacity:0; transform:translateY(14px) scale(.97); filter:blur(4px)} to{opacity:1; transform:none; filter:blur(0)}}
   .msg .bubble{
-    padding:12px 16px; border-radius:var(--radius); max-width:82%;
+    padding:13px 17px; border-radius:22px; max-width:82%;
     white-space:pre-wrap; word-wrap:break-word; line-height:1.6; position:relative;
-    -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+    -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
   }
   .msg.user{justify-content:flex-end;}
   .msg.user .bubble{
-    background:linear-gradient(135deg,#2f8bff 0%,#1463d6 60%,#0a3a8a 100%);
-    color:white; border-bottom-right-radius:5px;
-    box-shadow:var(--shadow), 0 0 0 1px rgba(120,190,255,.25) inset;
+    background:linear-gradient(135deg, #0a84ff 0%, #5e5cff 55%, #c44dff 100%);
+    color:#fff; border-bottom-right-radius:7px;
+    box-shadow:0 14px 36px -14px rgba(94,92,255,.6), inset 0 1px 0 rgba(255,255,255,.3);
+    border:1px solid rgba(255,255,255,.16);
   }
   .msg.bot .bubble{
-    background:var(--bot); border:1px solid var(--border); border-bottom-left-radius:5px;
-    box-shadow:0 4px 18px -10px rgba(0,30,80,.5), inset 0 1px 0 rgba(255,255,255,.06);
+    background:var(--glass-2); border:1px solid var(--stroke);
+    border-bottom-left-radius:7px;
+    box-shadow:var(--shadow-soft), var(--inner-light);
   }
   .msg.sys .bubble{
     background:transparent; color:var(--muted); font-size:12.5px; font-style:italic;
-    border:1px dashed var(--border); padding:8px 12px; border-radius:12px;
+    border:1px dashed var(--stroke); padding:8px 13px; border-radius:14px;
   }
   .msg .row-actions{position:absolute; top:6px; right:6px; display:flex; gap:4px; opacity:0; transition:opacity .2s;}
   .msg.bot:hover .row-actions{opacity:1;}
-  .row-actions button{background:var(--panel-2); border:1px solid var(--border); color:var(--muted); font-size:11px; padding:3px 7px; border-radius:6px; cursor:pointer;}
-  .row-actions button:hover{color:var(--text); border-color:var(--border-strong);}
+  .row-actions button{
+    background:var(--glass-3); border:1px solid var(--stroke); color:var(--text); font-size:11px;
+    padding:4px 9px; border-radius:8px; cursor:pointer;
+    -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+  }
+  .row-actions button:hover{border-color:var(--stroke-strong);}
   .cursor::after{content:"▍"; opacity:.8; margin-left:2px; color:var(--accent); animation:blink 1s steps(1) infinite;}
   @keyframes blink{50%{opacity:0}}
 
   /* Composer */
-  footer{border-top:1px solid var(--border); padding:12px 14px 16px; background:var(--panel); -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);}
-  .composer{max-width:880px; margin:0 auto; display:flex; gap:10px; align-items:flex-end;}
+  footer{
+    border-top:1px solid var(--stroke); padding:14px 16px 18px;
+    background:linear-gradient(0deg, var(--glass-2), transparent);
+    -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
+  }
+  .composer{max-width:900px; margin:0 auto; display:flex; gap:10px; align-items:flex-end;}
   textarea{
-    flex:1; resize:none; min-height:50px; max-height:220px;
-    background:var(--panel-2); color:var(--text);
-    border:1px solid var(--border); border-radius:14px;
-    padding:13px 16px; font:inherit; outline:none;
-    transition:border-color .2s, box-shadow .2s;
+    flex:1; resize:none; min-height:52px; max-height:220px;
+    background:var(--glass-2); color:var(--text);
+    border:1px solid var(--stroke); border-radius:20px;
+    padding:14px 18px; font:inherit; outline:none;
+    -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
+    transition:border-color .2s, box-shadow .2s, background .2s;
+    box-shadow:var(--inner-light);
   }
-  textarea:focus{border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in oklab,var(--accent) 22%,transparent);}
+  textarea::placeholder{color:var(--muted-2);}
+  textarea:focus{
+    border-color:rgba(100,210,255,.6);
+    box-shadow:0 0 0 4px rgba(100,210,255,.18), var(--inner-light);
+    background:var(--glass-3);
+  }
   button{
-    background:linear-gradient(135deg,#2f8bff,#1463d6);
-    color:white; border:0; padding:11px 18px; border-radius:14px; cursor:pointer; font-weight:600;
+    background:linear-gradient(135deg, #0a84ff 0%, #5e5cff 60%, #c44dff 100%);
+    color:#fff; border:0; padding:12px 20px; border-radius:18px; cursor:pointer; font-weight:600;
     transition:transform .12s, box-shadow .2s, filter .15s; font-size:14px;
-    box-shadow:0 6px 18px -6px rgba(47,139,255,.55), inset 0 1px 0 rgba(255,255,255,.18);
+    box-shadow:0 10px 24px -8px rgba(94,92,255,.6), inset 0 1px 0 rgba(255,255,255,.3);
   }
-  button:hover:not(:disabled){filter:brightness(1.08); transform:translateY(-1px);}
-  button:disabled{opacity:.5; cursor:not-allowed; filter:grayscale(.3);}
-  button.secondary{background:var(--panel-2); color:var(--text); border:1px solid var(--border); box-shadow:none;}
-  button.secondary:hover:not(:disabled){background:var(--panel); border-color:var(--border-strong);}
-  button.ghost{background:transparent; color:var(--muted); padding:6px 10px; font-size:12px; font-weight:500; box-shadow:none;}
-  button.ghost:hover:not(:disabled){color:var(--text); background:var(--panel-2);}
-  button.danger{background:linear-gradient(135deg,#ef4444,#b91c1c); box-shadow:0 6px 18px -6px rgba(239,68,68,.5);}
-  button.icon{padding:7px 10px; font-size:16px; line-height:1;}
-
-  .progress{height:3px; background:rgba(255,255,255,.06); overflow:hidden;}
-  .progress>div{height:100%; width:0%; background:linear-gradient(90deg,var(--user),var(--accent),var(--user)); background-size:200% 100%; animation:flow 2s linear infinite; transition:width .3s;}
-  @keyframes flow{0%{background-position:0% 0}100%{background-position:200% 0}}
-
-  .hint{font-size:12px; color:var(--muted); padding:8px 14px 0; max-width:880px; margin:0 auto;}
-  .hint #tokRate{color:var(--accent); font-variant-numeric:tabular-nums;}
-
-  select,input[type=text],input[type=number],input[type=range]{
-    background:var(--panel-2); color:var(--text); border:1px solid var(--border);
-    border-radius:10px; padding:7px 10px; font:inherit; font-size:12.5px;
+  button:hover:not(:disabled){filter:brightness(1.1); transform:translateY(-1px);}
+  button:active:not(:disabled){transform:translateY(0) scale(.98);}
+  button:disabled{opacity:.45; cursor:not-allowed; filter:grayscale(.4);}
+  button.secondary{
+    background:var(--glass-2); color:var(--text); border:1px solid var(--stroke);
+    -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+    box-shadow:var(--inner-light);
   }
-  select:focus,input:focus{border-color:var(--accent); outline:none;}
+  button.secondary:hover:not(:disabled){background:var(--glass-3); border-color:var(--stroke-strong);}
+  button.ghost{background:transparent; color:var(--muted); padding:7px 11px; font-size:12px; font-weight:500; box-shadow:none;}
+  button.ghost:hover:not(:disabled){color:var(--text); background:var(--glass-2);}
+  button.danger{background:linear-gradient(135deg,#ff453a,#c4302a); box-shadow:0 10px 24px -8px rgba(255,69,58,.5);}
+  button.icon{padding:8px 11px; font-size:16px; line-height:1;}
+
+  .progress{height:3px; background:rgba(255,255,255,.08); overflow:hidden;}
+  .progress>div{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, var(--hue-1), var(--hue-2), var(--hue-3), var(--hue-4), var(--hue-1));
+    background-size:300% 100%;
+    animation:flow 3s linear infinite; transition:width .3s;
+  }
+  @keyframes flow{0%{background-position:0% 0}100%{background-position:300% 0}}
+
+  .hint{font-size:12px; color:var(--muted); padding:10px 16px 0; max-width:900px; margin:0 auto;}
+  .hint #tokRate{color:#7ef7ec; font-variant-numeric:tabular-nums;}
+
+  select, input[type=text], input[type=number], input[type=range]{
+    background:var(--glass-2); color:var(--text); border:1px solid var(--stroke);
+    border-radius:12px; padding:8px 12px; font:inherit; font-size:12.5px;
+    -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+  }
+  select:focus, input:focus{border-color:rgba(100,210,255,.55); outline:none; box-shadow:0 0 0 3px rgba(100,210,255,.18);}
   select{max-width:340px;}
-  option,optgroup{background:var(--panel-solid); color:var(--text);}
+  option, optgroup{background:var(--glass-solid); color:var(--text);}
 
   /* Modal */
   .modal-backdrop{
-    position:fixed; inset:0; background:rgba(0,10,25,.7); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    position:fixed; inset:0; background:rgba(5,8,18,.55);
+    -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%);
     display:none; align-items:center; justify-content:center; z-index:100; padding:20px;
-    animation:fade .2s ease;
+    animation:fade .25s ease;
   }
   @keyframes fade{from{opacity:0}to{opacity:1}}
   .modal-backdrop.open{display:flex;}
   .modal{
-    background:var(--panel-solid); border:1px solid var(--border-strong); border-radius:18px;
+    background:var(--glass);
+    -webkit-backdrop-filter:var(--blur-strong); backdrop-filter:var(--blur-strong);
+    border:1px solid var(--stroke-strong); border-radius:26px;
     max-width:760px; width:100%; max-height:88vh; display:flex; flex-direction:column;
-    box-shadow:0 24px 60px -10px rgba(0,30,80,.7);
+    box-shadow:var(--shadow-pop), var(--inner-light);
+    animation:pop .35s cubic-bezier(.2,.9,.2,1);
   }
-  .modal-head{padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px;}
-  .modal-head h3{margin:0; font-size:16px; flex:1;}
-  .tabs{display:flex; gap:4px; padding:8px 12px 0; border-bottom:1px solid var(--border);}
-  .tab{padding:9px 16px; cursor:pointer; font-size:13px; color:var(--muted); border:0; background:transparent; border-radius:8px 8px 0 0; font-weight:600;}
-  .tab.active{color:var(--accent); background:var(--panel-2); border-bottom:2px solid var(--accent);}
-  .tab:hover:not(.active){color:var(--text);}
-  .modal-body{padding:18px 20px; overflow-y:auto; flex:1;}
+  @keyframes pop{from{opacity:0; transform:translateY(20px) scale(.96)}to{opacity:1; transform:none}}
+  .modal-head{padding:18px 22px; border-bottom:1px solid var(--stroke); display:flex; align-items:center; gap:10px;}
+  .modal-head h3{margin:0; font-size:16px; flex:1; font-weight:700; letter-spacing:-.2px;}
+  .tabs{display:flex; gap:4px; padding:10px 14px 0; border-bottom:1px solid var(--stroke);}
+  .tab{
+    padding:10px 16px; cursor:pointer; font-size:13px; color:var(--muted); border:0;
+    background:transparent; border-radius:12px 12px 0 0; font-weight:600;
+    transition:color .2s, background .2s;
+  }
+  .tab.active{color:var(--text-strong); background:var(--glass-2); box-shadow:inset 0 -2px 0 var(--accent-2);}
+  .tab:hover:not(.active){color:var(--text); background:var(--glass);}
+  .modal-body{padding:20px 22px; overflow-y:auto; flex:1;}
   .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px;}
   .row label{font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:6px;}
   .row .meta{font-size:12px; color:var(--muted); flex:1; min-width:200px;}
   .meta{font-size:12px; color:var(--muted);}
-  .usage-bar{height:6px; background:rgba(255,255,255,.06); border-radius:4px; overflow:hidden; margin:10px 0;}
-  .usage-bar>div{height:100%; background:linear-gradient(90deg,var(--accent-2),var(--accent)); transition:width .4s; width:0%;}
-  .usage-bar.warn>div{background:linear-gradient(90deg,#fbbf24,#f59e0b);}
-  .usage-bar.full>div{background:linear-gradient(90deg,#ef4444,#b91c1c);}
-  .kb-tag{display:inline-block; font-size:11px; background:var(--panel-2); color:var(--muted); padding:3px 8px; border-radius:7px; margin:2px 4px 0 0; border:1px solid var(--border);}
-  .kb-result{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin:8px 0; font-size:12.5px;}
+  .usage-bar{height:6px; background:rgba(255,255,255,.08); border-radius:999px; overflow:hidden; margin:10px 0;}
+  .usage-bar>div{height:100%; background:linear-gradient(90deg, var(--accent-2), var(--accent)); transition:width .4s; width:0%; border-radius:999px;}
+  .usage-bar.warn>div{background:linear-gradient(90deg, var(--warn), #ff9f0a);}
+  .usage-bar.full>div{background:linear-gradient(90deg, var(--err), #c4302a);}
+  .kb-tag{
+    display:inline-block; font-size:11px; background:var(--glass-2); color:var(--text);
+    padding:4px 10px; border-radius:999px; margin:2px 4px 0 0; border:1px solid var(--stroke);
+  }
+  .kb-result{
+    background:var(--glass-2); border:1px solid var(--stroke); border-radius:14px;
+    padding:11px 14px; margin:8px 0; font-size:12.5px;
+    -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+  }
   .kb-result .src{color:var(--muted); font-size:11px; margin-bottom:4px;}
 
   .source-toggles{display:flex; gap:8px; flex-wrap:wrap;}
-  .src-toggle{display:flex; align-items:center; gap:6px; padding:7px 12px; border:1px solid var(--border); border-radius:999px; cursor:pointer; background:var(--panel-2); font-size:12.5px; user-select:none;}
+  .src-toggle{
+    display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid var(--stroke);
+    border-radius:999px; cursor:pointer; background:var(--glass-2); font-size:12.5px; user-select:none;
+    -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); transition:all .2s;
+  }
   .src-toggle input{margin:0;}
-  .src-toggle.on{border-color:var(--accent); color:var(--accent);}
+  .src-toggle.on{
+    border-color:rgba(100,210,255,.55); color:#7ef7ec;
+    background:rgba(48,213,200,.14);
+    box-shadow:0 6px 16px -8px rgba(48,213,200,.5);
+  }
 
   ::-webkit-scrollbar{width:10px; height:10px;}
-  ::-webkit-scrollbar-thumb{background:linear-gradient(180deg, rgba(47,139,255,.4), rgba(56,224,212,.4)); border-radius:10px; border:2px solid transparent; background-clip:padding-box;}
-  ::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg, rgba(47,139,255,.7), rgba(56,224,212,.7)); background-clip:padding-box;}
+  ::-webkit-scrollbar-thumb{
+    background:linear-gradient(180deg, rgba(100,210,255,.35), rgba(196,77,255,.35));
+    border-radius:10px; border:2px solid transparent; background-clip:padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover{
+    background:linear-gradient(180deg, rgba(100,210,255,.7), rgba(196,77,255,.7));
+    background-clip:padding-box;
+  }
 
   @media (max-width:600px){
     header.top h1{font-size:14px;}
     select{max-width:100%; flex:1;}
     .msg .bubble{max-width:92%;}
   }
+
+  /* Bouncing dots indicator */
+  .lookup-indicator{display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-style:italic;}
+  .bounce-dots{display:inline-flex; gap:4px; margin-left:2px;}
+  .bounce-dots i{
+    width:7px; height:7px; border-radius:50%;
+    background:linear-gradient(135deg, var(--accent-2), #c44dff);
+    display:inline-block;
+    animation:lk-bounce 1s infinite ease-in-out;
+  }
+  .bounce-dots i:nth-child(2){animation-delay:.15s;}
+  .bounce-dots i:nth-child(3){animation-delay:.3s;}
+  @keyframes lk-bounce{
+    0%,80%,100%{transform:translateY(0); opacity:.4;}
+    40%{transform:translateY(-8px); opacity:1;}
+  }
+
+  /* Inline code editor */
+  .code-editor{
+    margin:12px 0; border:1px solid var(--stroke-strong); border-radius:16px;
+    background:rgba(0,0,0,.35); overflow:hidden; box-shadow:var(--shadow-soft), var(--inner-light);
+    -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);
+  }
+  html[data-theme="light"] .code-editor{background:rgba(255,255,255,.7);}
+  .code-editor .ce-head{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 12px; background:var(--glass-2);
+    border-bottom:1px solid var(--stroke); font-size:12px; color:var(--muted);
+  }
+  .code-editor .ce-lang{font-weight:700; color:#7ef7ec; text-transform:uppercase; letter-spacing:.8px;}
+  .code-editor .ce-actions{margin-left:auto; display:flex; gap:6px;}
+  .code-editor .ce-actions button{
+    padding:4px 11px; font-size:11px; border-radius:8px; border:1px solid var(--stroke);
+    background:var(--glass-2); color:var(--text); cursor:pointer; box-shadow:none;
+  }
+  .code-editor .ce-actions button.run{
+    background:linear-gradient(135deg, var(--ok), #28a745); color:#fff; border:none; font-weight:600;
+    box-shadow:0 6px 14px -6px rgba(48,209,88,.5);
+  }
+  .code-editor .ce-actions button:hover{filter:brightness(1.12);}
+  .code-editor textarea.ce-code{
+    width:100%; min-height:140px; max-height:400px; resize:vertical;
+    border:none; outline:none; padding:12px 14px;
+    font:13px/1.55 ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    background:transparent; color:var(--text);
+    tab-size:2;
+  }
+  .code-editor .ce-output{
+    border-top:1px solid var(--stroke); background:rgba(0,0,0,.28);
+    max-height:300px; overflow:auto;
+  }
+  html[data-theme="light"] .code-editor .ce-output{background:rgba(0,0,0,.05);}
+  .code-editor .ce-output pre{
+    margin:0; padding:10px 14px;
+    font:12px/1.55 ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    white-space:pre-wrap; word-break:break-word; color:var(--text);
+  }
+  .code-editor .ce-output .line-err{color:var(--err);}
+  .code-editor .ce-output .line-warn{color:var(--warn);}
+  .code-editor iframe.ce-frame{width:100%; height:260px; border:none; background:#fff; display:block;}
+  .code-editor pre.ce-static{
+    margin:0; padding:12px 14px;
+    font:13px/1.55 ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    white-space:pre-wrap; word-break:break-word; color:var(--text);
+  }
+
+  /* ============ Model Picker (custom popover) ============ */
+  #modelSel{ display:none !important; }
+  .model-btn{
+    display:inline-flex; align-items:center; gap:10px;
+    padding:7px 14px 7px 12px; border-radius:14px;
+    background:var(--glass-2); border:1px solid var(--stroke);
+    color:var(--text); font:600 13px/1.2 inherit; cursor:pointer;
+    backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur);
+    box-shadow:var(--inner-light), 0 4px 14px rgba(0,0,0,.18);
+    transition:transform .18s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+    max-width:340px;
+  }
+  .model-btn:hover{ background:var(--glass-3); border-color:var(--stroke-strong); transform:translateY(-1px); }
+  .model-btn:active{ transform:translateY(0) scale(.98); }
+  .model-btn .mb-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:linear-gradient(135deg,var(--hue-3),var(--hue-2));
+    box-shadow:0 0 10px var(--hue-3);
+    flex-shrink:0;
+  }
+  .model-btn .mb-label{
+    flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .model-btn .mb-size{
+    font-size:11px; padding:2px 8px; border-radius:8px;
+    background:rgba(255,255,255,.1); color:var(--muted);
+    border:1px solid var(--stroke);
+  }
+  .model-btn .mb-caret{ opacity:.6; font-size:10px; }
+
+  .mp-backdrop{
+    position:fixed; inset:0; z-index:1000;
+    background:radial-gradient(120% 80% at 50% 0%, rgba(157,77,255,.12), rgba(5,6,10,.65));
+    backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%);
+    opacity:0; pointer-events:none;
+    transition:opacity .25s ease;
+    display:grid; place-items:center;
+    padding:24px;
+  }
+  .mp-backdrop.open{ opacity:1; pointer-events:auto; }
+  .mp-panel{
+    width:min(820px, 100%); max-height:min(82vh, 760px);
+    background:var(--glass-solid);
+    background-image:
+      radial-gradient(120% 80% at 0% 0%, color-mix(in oklab, var(--hue-2) 22%, transparent), transparent 55%),
+      radial-gradient(120% 80% at 100% 100%, color-mix(in oklab, var(--hue-3) 18%, transparent), transparent 55%);
+    border:1px solid var(--stroke-strong);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-pop), 0 0 0 1px rgba(255,255,255,.04) inset;
+    display:flex; flex-direction:column; overflow:hidden;
+    position:relative; margin:auto;
+    transform:translateY(14px) scale(.97); opacity:0;
+    transition:transform .32s cubic-bezier(.2,.9,.25,1.2), opacity .25s ease;
+  }
+  .mp-backdrop.open .mp-panel{ transform:translateY(0) scale(1); opacity:1; }
+  .mp-header{
+    padding:18px 20px 12px;
+    border-bottom:1px solid var(--stroke);
+    display:flex; flex-direction:column; gap:12px;
+    background:linear-gradient(180deg, rgba(255,255,255,.04), transparent);
+  }
+  .mp-title-row{ display:flex; align-items:center; gap:12px; }
+  .mp-title{ font-size:18px; font-weight:700; color:var(--text-strong); letter-spacing:-0.01em; flex:1; }
+  .mp-count{display:inline-flex;margin-left:8px;padding:4px 8px;border:1px solid var(--stroke);border-radius:999px;color:var(--muted);font-size:10px;vertical-align:middle;}
+  .mp-close{
+    width:32px; height:32px; border-radius:50%;
+    border:1px solid var(--stroke); background:var(--glass-2);
+    color:var(--text); cursor:pointer; font-size:16px;
+    display:inline-flex; align-items:center; justify-content:center;
+    transition:transform .15s ease, background .2s ease;
+  }
+  .mp-close:hover{ background:var(--glass-3); transform:rotate(90deg); }
+  .mp-search{
+    width:100%; padding:11px 14px 11px 38px;
+    border-radius:14px; border:1px solid var(--stroke);
+    background:var(--glass) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8b0c0' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='m20 20-3-3'/></svg>") no-repeat 12px center / 16px 16px;
+    color:var(--text); font:500 14px/1.2 inherit;
+    outline:none; transition:border-color .2s, background-color .2s;
+  }
+  .mp-search:focus{ border-color:var(--accent-2); background-color:var(--glass-2); }
+  .mp-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .mp-chip{
+    padding:5px 11px; border-radius:999px;
+    border:1px solid var(--stroke); background:var(--glass);
+    color:var(--muted); font:600 11.5px/1 inherit; cursor:pointer;
+    transition:all .18s ease; white-space:nowrap;
+  }
+  .mp-chip:hover{ color:var(--text); border-color:var(--stroke-strong); }
+  .mp-chip.active{
+    background:linear-gradient(135deg, var(--hue-2), var(--hue-3));
+    color:#fff; border-color:transparent;
+    box-shadow:0 4px 14px -4px var(--hue-2);
+  }
+  .mp-body{
+    flex:1; overflow-y:auto; padding:10px 14px 16px;
+    scroll-behavior:smooth;
+  }
+  .mp-body::-webkit-scrollbar{ width:8px; }
+  .mp-body::-webkit-scrollbar-thumb{ background:var(--stroke-strong); border-radius:4px; }
+  .mp-group-title{
+    position:sticky; top:0; z-index:2;
+    padding:10px 6px 6px;
+    font:700 11px/1 inherit; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--muted);
+    background:linear-gradient(180deg, var(--glass-solid) 55%, transparent);
+    backdrop-filter:blur(8px);
+  }
+  .mp-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:8px; padding:2px 4px 8px; }
+  .mp-card{
+    text-align:left; padding:11px 12px; border-radius:14px;
+    border:1px solid var(--stroke); background:var(--glass);
+    color:var(--text); cursor:pointer; position:relative;
+    display:flex; flex-direction:column; gap:6px;
+    transition:transform .18s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .mp-card:hover{
+    background:var(--glass-2); border-color:var(--stroke-strong);
+    transform:translateY(-2px);
+    box-shadow:0 8px 22px -10px rgba(0,0,0,.5);
+  }
+  .mp-card.selected{
+    border-color:transparent;
+    background:linear-gradient(135deg, color-mix(in oklab, var(--hue-2) 28%, var(--glass-2)), color-mix(in oklab, var(--hue-3) 22%, var(--glass-2)));
+    box-shadow:0 0 0 2px var(--accent-2), 0 10px 26px -10px var(--hue-2);
+  }
+  .mp-card.warn{ opacity:.78; }
+  .mp-card-top{ display:flex; align-items:center; gap:8px; }
+  .mp-card-label{
+    flex:1; min-width:0;
+    font:600 13.5px/1.3 inherit; color:var(--text-strong);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .mp-card-size{
+    font:700 10.5px/1 inherit; padding:4px 7px; border-radius:7px;
+    background:rgba(255,255,255,.08); border:1px solid var(--stroke);
+    color:var(--muted); white-space:nowrap;
+  }
+  .mp-card.selected .mp-card-size{ background:rgba(255,255,255,.18); color:#fff; border-color:transparent; }
+  .mp-card-id{
+    font:500 11px/1.2 ui-monospace, monospace;
+    color:var(--muted-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .mp-card-warn{
+    position:absolute; top:8px; right:8px;
+    font-size:11px; color:var(--warn);
+  }
+  .mp-empty{ padding:40px 16px; text-align:center; color:var(--muted); }
+  @media (max-width:560px){
+    .mp-grid{ grid-template-columns:1fr; }
+    .mp-panel{ max-height:92vh; }
+  }
+
+/* === Model power-level bars (added) === */
+.mp-card-desc{ font-size:11.5px; line-height:1.45; color:var(--muted); margin-top:6px; }
+.mp-card-power{ display:flex; flex-direction:column; gap:3px; margin-top:8px; padding-top:8px; border-top:1px solid var(--stroke); }
+.pl-row{ display:flex; align-items:center; gap:8px; font-size:10.5px; color:var(--muted); }
+.pl-lbl{ flex:0 0 64px; font-weight:600; letter-spacing:.2px; }
+.pl-bars{ display:inline-flex; gap:3px; }
+.pl-pip{ width:14px; height:5px; border-radius:3px; background:var(--stroke); }
+.pl-pip.on{ background:linear-gradient(90deg, var(--hue-3), var(--hue-1)); box-shadow:0 0 6px rgba(157,77,255,.5); }
 </style>
+
 </head>
 <body>
 <div class="app">
@@ -250,31 +649,49 @@
       <span class="dot" id="dot"></span>
       <h1>AI Chat</h1>
       <span class="status" id="status">Loading model list…</span>
-      <span class="hw-chips" id="hwChips"></span>
+      <span class="hw-chips" id="hwChips" style="display:none;"></span>
       <span style="flex:1"></span>
       <button id="themeBtn" class="ghost icon" title="Toggle theme">🌗</button>
       <select id="modelSel"></select>
+      <button id="modelPickerBtn" class="model-btn" type="button" aria-haspopup="dialog" aria-expanded="false">
+        <span class="mb-dot"></span>
+        <span class="mb-label">Choose a model…</span>
+        <span class="mb-size" id="mbSize">—</span>
+        <span class="mb-caret">▾</span>
+      </button>
+      <div class="mp-backdrop" id="modelPicker" role="dialog" aria-modal="true" aria-labelledby="mpTitle" hidden>
+        <div class="mp-panel" role="document">
+          <div class="mp-header">
+            <div class="mp-title-row">
+              <div class="mp-title" id="mpTitle">Select an AI model <span class="mp-count" id="mpCount"></span></div>
+              <button class="mp-close" id="mpClose" type="button" aria-label="Close">✕</button>
+            </div>
+            <input id="mpSearch" class="mp-search" type="search" placeholder="Search models, families, sizes…" autocomplete="off" />
+            <div class="mp-chips" id="mpChips"></div>
+          </div>
+          <div class="mp-body" id="mpBody"></div>
+        </div>
+      </div>
       <button id="loadBtn" class="secondary" style="padding:6px 12px; font-size:13px;">Load</button>
-      <label class="chip" title="Use a free cloud model instead of local"><input type="checkbox" id="onlineToggle" style="margin:0 4px 0 0;"> Online</label>
       <button id="settingsBtn" class="ghost icon" title="Settings">⚙️</button>
     </header>
     <div class="progress"><div id="bar"></div></div>
     <main id="chat">
-      <div class="msg sys"><div class="bubble" id="introMsg">100% in-browser inference — runs <b>fully offline</b> after first download. Grounded with live snippets from <b>Wikipedia</b>, <b>Britannica</b>, and <b>BBC News</b>. Click <b>⚙️ Settings</b> to configure sources & generation.<br><br><b>Media:</b> use the buttons below the composer, or type <code>/image &lt;prompt&gt;</code>, <code>/video &lt;prompt&gt;</code>, <code>/speak &lt;text&gt;</code>.</div></div>
+      <div class="msg sys"><div class="bubble" id="introMsg">100% in-browser inference — runs <b>fully offline</b> after first download. Grounded with live snippets from <b>Wikipedia</b>, <b>Britannica</b>, and <b>BBC News</b>. Click <b>⚙️ Settings</b> to configure sources & generation.<br><br><b>Image generation:</b> click <b>Generate Image</b> or type <code>/image &lt;prompt&gt;</code>. Powered by Pollinations.ai — free, no key required, returns a 1024×1024 PNG. Requires an internet connection.</div></div>
     </main>
     <footer>
       <div class="composer">
         <textarea id="input" placeholder="Load a model first…" disabled></textarea>
-        <button id="send" disabled>Send</button>
-        <button id="stop" class="danger" style="display:none;">⏹ Stop</button>
+        <button id="mic" class="secondary" title="Hold to talk / click to toggle voice mode" type="button" aria-label="Voice mode">🎤</button>
+        <button id="send" disabled>⠀↑⠀</button>
+        <button id="stop" class="danger" style="display:none;">⏹ </button>
       </div>
       <div class="hint" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px;">
-        <button id="mediaImg" class="secondary" type="button" style="padding:4px 10px;font-size:12px;">🖼️ Image</button>
-        <button id="mediaVid" class="secondary" type="button" style="padding:4px 10px;font-size:12px;">🎬 Video</button>
-        <button id="mediaAud" class="secondary" type="button" style="padding:4px 10px;font-size:12px;">🔊 Speak</button>
-        <span class="meta" style="font-size:11px;opacity:.7;">Image/Video via Pollinations · Audio via your browser</span>
+        <button id="mediaImg" class="secondary" type="button" style="padding:4px 10px;font-size:12px;">Generate Image</button>
+        <span class="meta" style="font-size:11px;opacity:.7;">Real SD-Turbo on WebGPU · offline after first load</span>
       </div>
-      <div class="hint" id="storageHint">Checking storage… <span id="tokRate"></span></div>
+      <div class="hint"><span id="tokRate"></span></div>
+      <div id="storageHint" style="display:none;"></div>
     </footer>
   </div>
 </div>
@@ -289,6 +706,8 @@
     <div class="tabs">
       <button class="tab active" data-tab="kb">📚 Local knowledge & auto-feed</button>
       <button class="tab" data-tab="gen">🎛️ Generation</button>
+      <button class="tab" data-tab="specs">🖥️ Specs</button>
+      <button class="tab" data-tab="about">ℹ️ About us</button>
     </div>
     <div class="modal-body">
       <!-- KB TAB -->
@@ -354,6 +773,44 @@
           <button id="regenBtn" class="secondary">🔁 Regenerate last</button>
         </div>
       </div>
+      <!-- SPECS TAB -->
+      <div class="tab-pane" data-pane="specs" style="display:none;">
+        <div class="row"><span class="meta">Runtime hardware & network specs for this browser session.</span></div>
+        <div class="row" id="specsChips" style="flex-wrap:wrap;gap:6px;"></div>
+        <div class="meta" id="specsStorage" style="margin-top:8px;">Checking storage…</div>
+        <div class="meta" id="specsGpu" style="margin-top:4px;"></div>
+        <div class="row" style="margin-top:14px;flex-direction:column;align-items:stretch;gap:6px;">
+          <label class="meta">CORS proxy (used for Britannica & BBC fetches)</label>
+          <input type="text" id="specsCors" style="width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font:12px/1.4 monospace;" placeholder="https://api.allorigins.win/raw?url=">
+          <div class="row" style="gap:6px;">
+            <button id="specsCorsSave" class="secondary">Save proxy</button>
+            <button id="specsCorsReset" class="secondary">Reset to default</button>
+          </div>
+          <span class="meta" style="font-size:11px;opacity:.7;">Must accept a URL-encoded target as a query string. Empty = direct fetch (may fail due to CORS).</span>
+        </div>
+      </div>
+      <!-- ABOUT TAB -->
+      <div class="tab-pane" data-pane="about" style="display:none;">
+        <div style="line-height:1.7;">
+          <h3 style="margin:0 0 8px;">About Offline AI Chat</h3>
+          <p>A privacy-first, fully in-browser AI assistant. Models, knowledge base, and chat history all live on your device — nothing is ever sent to a server we control.</p>
+          <h4 style="margin:14px 0 4px;">What it does</h4>
+          <ul style="margin:0;padding-left:18px;">
+            <li>Runs open-source LLMs locally via WebGPU / WASM (Transformers.js).</li>
+            <li>Grounds answers with live snippets from Wikipedia, Britannica, and BBC News.</li>
+            <li>Stores knowledge and chats in OPFS so it works after the first download — even offline.</li>
+            <li>Generates images, video, and code editors directly in the chat.</li>
+            <li>Real-time voice mode: speaks each sentence the moment the model writes it.</li>
+          </ul>
+          <h4 style="margin:14px 0 4px;">Our principles</h4>
+          <ul style="margin:0;padding-left:18px;">
+            <li><b>Private by default</b> — all inference happens in your browser tab.</li>
+            <li><b>Open</b> — built on open models, open standards, and a single HTML file.</li>
+            <li><b>Offline-first</b> — once cached, no network is required.</li>
+          </ul>
+          <p class="meta" style="margin-top:14px;">© Offline AI Chat. Made with 💙 for the open web.</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -405,7 +862,7 @@ openSidebar.addEventListener('click',()=>sidebar.classList.add('open'));
 closeSidebar.addEventListener('click',()=>sidebar.classList.remove('open'));
 
 /* ---------- Settings modal ---------- */
-settingsBtn.addEventListener('click',()=>settingsModal.classList.add('open'));
+settingsBtn.addEventListener('click',()=>{ settingsModal.classList.add('open'); try{ window.renderSpecs?.(); }catch{} });
 closeSettings.addEventListener('click',()=>settingsModal.classList.remove('open'));
 settingsModal.addEventListener('click',(e)=>{if(e.target===settingsModal) settingsModal.classList.remove('open');});
 document.querySelectorAll('.tab').forEach(btn=>{
@@ -413,6 +870,7 @@ document.querySelectorAll('.tab').forEach(btn=>{
     document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b===btn));
     const t=btn.dataset.tab;
     document.querySelectorAll('.tab-pane').forEach(p=>p.style.display=p.dataset.pane===t?'':'none');
+    if(t==='specs'){ try{ window.renderSpecs?.(); }catch{} }
   });
 });
 
@@ -777,6 +1235,131 @@ function escHtml(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;
 const idle=(cb,timeout=4000)=>(window.requestIdleCallback||((c)=>setTimeout(()=>c({timeRemaining:()=>0}),1)))(cb,{timeout});
 function withTimeout(promise, ms){ return Promise.race([promise, new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')), ms))]); }
 
+// Small, safe Markdown renderer for model output. A pair of ** markers toggles
+// bold text, and a leading # through ###### styles only that line as a heading.
+function renderMessageText(target, value){
+  const text=String(value??'');
+  target.dataset.rawText=text;
+  target.replaceChildren();
+
+  // Split into alternating prose / fenced-code segments.
+  // Matches ```lang\n...\n``` (lang optional). Tolerates unclosed trailing fence (streaming).
+  const fenceRe=/```([a-zA-Z0-9_+-]*)\n([\s\S]*?)(?:```|$)/g;
+  let lastIndex=0; let m;
+  const segments=[];
+  while((m=fenceRe.exec(text))!==null){
+    if(m.index>lastIndex) segments.push({type:'prose', text:text.slice(lastIndex, m.index)});
+    segments.push({type:'code', lang:(m[1]||'').toLowerCase(), code:m[2], closed:text.slice(m.index+m[0].length-3,m.index+m[0].length)==='```'});
+    lastIndex=m.index+m[0].length;
+  }
+  if(lastIndex<text.length) segments.push({type:'prose', text:text.slice(lastIndex)});
+
+  let bold=false;
+  for(const seg of segments){
+    if(seg.type==='code'){
+      target.appendChild(buildCodeBlock(seg.lang, seg.code, seg.closed));
+      continue;
+    }
+    const lines=seg.text.split('\n');
+    lines.forEach((line,lineIndex)=>{
+      const heading=line.match(/^(#{1,6})\s+(.+)$/);
+      const container=document.createElement(heading?'h'+heading[1].length:'span');
+      if(!heading) container.style.display='inline';
+      else {
+        container.style.margin=lineIndex?'0.75em 0 0.25em':'0 0 0.25em';
+        container.style.lineHeight='1.25';
+      }
+      const content=heading?heading[2]:line;
+      const pieces=content.split('**');
+      pieces.forEach((piece,index)=>{
+        if(index){ bold=!bold; }
+        if(!piece) return;
+        const node=bold?document.createElement('strong'):document.createTextNode(piece);
+        if(bold) node.textContent=piece;
+        container.appendChild(node);
+      });
+      target.appendChild(container);
+      if(lineIndex<lines.length-1) target.appendChild(document.createTextNode('\n'));
+    });
+  }
+}
+
+/* Build an inline runnable code block. Runnable languages: js/javascript, html, css. Others render read-only. */
+function buildCodeBlock(lang, code, closed){
+  const wrap=document.createElement('div'); wrap.className='code-editor';
+  const head=document.createElement('div'); head.className='ce-head';
+  const langLabel=document.createElement('span'); langLabel.className='ce-lang'; langLabel.textContent=lang||'code';
+  head.appendChild(langLabel);
+  const actions=document.createElement('div'); actions.className='ce-actions';
+  head.appendChild(actions);
+  wrap.appendChild(head);
+
+  const runnable=/^(js|javascript|html|css)$/.test(lang);
+  // While streaming (unclosed fence), show as static pre so we don't churn an editor.
+  if(!closed || !runnable){
+    const pre=document.createElement('pre'); pre.className='ce-static'; pre.textContent=code;
+    wrap.appendChild(pre);
+    const copy=document.createElement('button'); copy.textContent='Copy'; copy.type='button';
+    copy.onclick=()=>{ navigator.clipboard?.writeText(code).then(()=>{copy.textContent='✓'; setTimeout(()=>copy.textContent='Copy',1200);}); };
+    actions.appendChild(copy);
+    return wrap;
+  }
+
+  const ta=document.createElement('textarea'); ta.className='ce-code'; ta.spellcheck=false; ta.value=code;
+  // Auto-size to content (up to max-height via CSS).
+  setTimeout(()=>{ ta.style.height='auto'; ta.style.height=Math.min(400,Math.max(140,ta.scrollHeight+4))+'px'; },0);
+  wrap.appendChild(ta);
+
+  const output=document.createElement('div'); output.className='ce-output'; output.style.display='none';
+  wrap.appendChild(output);
+
+  const copy=document.createElement('button'); copy.textContent='Copy'; copy.type='button';
+  copy.onclick=()=>{ navigator.clipboard?.writeText(ta.value).then(()=>{copy.textContent='✓'; setTimeout(()=>copy.textContent='Copy',1200);}); };
+  const reset=document.createElement('button'); reset.textContent='Reset'; reset.type='button';
+  reset.onclick=()=>{ ta.value=code; output.style.display='none'; output.replaceChildren(); };
+  const run=document.createElement('button'); run.textContent='▶ Run'; run.type='button'; run.className='run';
+  run.onclick=()=>runCodeEditor(lang, ta.value, output);
+  actions.appendChild(copy); actions.appendChild(reset); actions.appendChild(run);
+
+  return wrap;
+}
+
+function runCodeEditor(lang, code, output){
+  output.replaceChildren(); output.style.display='';
+  if(lang==='html' || lang==='css'){
+    const iframe=document.createElement('iframe'); iframe.className='ce-frame'; iframe.sandbox='allow-scripts allow-modals';
+    const doc = lang==='css'
+      ? `<!doctype html><html><head><style>${code}</style></head><body><h1>Heading</h1><p>Sample paragraph with <a href="#">a link</a> and <button>a button</button>.</p></body></html>`
+      : code;
+    output.appendChild(iframe);
+    iframe.srcdoc=doc;
+    return;
+  }
+  // JavaScript: capture console output.
+  const pre=document.createElement('pre'); output.appendChild(pre);
+  const log=(level,args)=>{
+    const line=document.createElement('div');
+    if(level==='error') line.className='line-err';
+    else if(level==='warn') line.className='line-warn';
+    line.textContent=args.map(a=>{
+      try{ return typeof a==='string'?a:JSON.stringify(a,null,2); }catch{ return String(a); }
+    }).join(' ');
+    pre.appendChild(line);
+  };
+  const sandboxConsole={
+    log:(...a)=>log('log',a), info:(...a)=>log('log',a),
+    warn:(...a)=>log('warn',a), error:(...a)=>log('error',a),
+    debug:(...a)=>log('log',a),
+  };
+  try{
+    const fn=new Function('console', `"use strict";\nreturn (async()=>{\n${code}\n})();`);
+    Promise.resolve(fn(sandboxConsole)).then(v=>{
+      if(v!==undefined) log('log',['⇒', v]);
+    }).catch(err=>log('error',[String(err && err.stack || err)]));
+  }catch(err){ log('error',[String(err && err.stack || err)]); }
+}
+
+
 let _bytesUsed=0;
 async function refreshBytes(){ try{ if(navigator.storage?.estimate){ const {usage=0}=await navigator.storage.estimate(); _bytesUsed=usage; } }catch{} }
 const APP_CAP_BYTES=10*1024*1024*1024; // 10 GB display cap with OPFS
@@ -810,74 +1393,234 @@ function refreshUsageUI(){
    directly in the browser. */
 const MODELS=[
   /* ──────────────── ⚡ Ultra-light (<300 MB) ──────────────── */
-  {id:'HuggingFaceTB/SmolLM2-135M-Instruct',         label:'SmolLM2 135M Instruct — instant',                  mb:110, group:'⚡ Ultra-light (<300 MB)'},
-  {id:'Xenova/LaMini-Flan-T5-77M',                   label:'LaMini-Flan-T5 77M — Q&A',                          mb:90,  group:'⚡ Ultra-light (<300 MB)'},
-  {id:'Xenova/LaMini-Flan-T5-248M',                  label:'LaMini-Flan-T5 248M — Q&A',                         mb:230, group:'⚡ Ultra-light (<300 MB)'},
-  {id:'HuggingFaceTB/SmolLM2-360M-Instruct',         label:'SmolLM2 360M Instruct — fast & smarter',            mb:260, group:'⚡ Ultra-light (<300 MB)'},
-  {id:'onnx-community/LFM2-350M-ONNX',               label:'Liquid LFM2 350M — efficient',                      mb:300, group:'⚡ Ultra-light (<300 MB)'},
+  {id:'HuggingFaceTB/SmolLM2-135M-Instruct',         label:'SmolLM2 135M Instruct — instant',                  mb:110, group:'⚡ Ultra-light (<300 MB)', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device. Hugging Face SmolLM — purpose-built for tiny on-device chat.', code:1, reason:1, speed:5},
+  {id:'Xenova/LaMini-Flan-T5-77M',                   label:'LaMini-Flan-T5 77M — Q&A',                          mb:90,  group:'⚡ Ultra-light (<300 MB)', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device.', code:1, reason:1, speed:5},
+  {id:'Xenova/LaMini-Flan-T5-248M',                  label:'LaMini-Flan-T5 248M — Q&A',                         mb:230, group:'⚡ Ultra-light (<300 MB)', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device.', code:2, reason:2, speed:4},
+  {id:'HuggingFaceTB/SmolLM2-360M-Instruct',         label:'SmolLM2 360M Instruct — fast & smarter',            mb:260, group:'⚡ Ultra-light (<300 MB)', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device. Hugging Face SmolLM — purpose-built for tiny on-device chat.', code:2, reason:2, speed:4},
+  {id:'onnx-community/LFM2-350M-ONNX',               label:'Liquid LFM2 350M — efficient',                      mb:300, group:'⚡ Ultra-light (<300 MB)', desc:'Compact generalist with solid everyday chat ability. Liquid AI LFM2 — efficient state-space hybrid.', code:2, reason:2, speed:4},
 
   /* ──────────────── 🪶 Small (300 MB – 1 GB) ──────────────── */
-  {id:'onnx-community/Qwen2.5-0.5B-Instruct',        label:'Qwen2.5 0.5B Instruct — best tiny generalist',      mb:380, group:'🪶 Small (300 MB – 1 GB)'},
-  {id:'Xenova/Qwen1.5-0.5B-Chat',                    label:'Qwen1.5 0.5B Chat',                                 mb:400, group:'🪶 Small (300 MB – 1 GB)'},
-  {id:'onnx-community/Qwen3-0.6B-ONNX',              label:'Qwen3 0.6B — newest tiny (2025)',                   mb:500, group:'🪶 Small (300 MB – 1 GB)'},
-  {id:'onnx-community/LFM2-700M-ONNX',               label:'Liquid LFM2 700M',                                  mb:600, group:'🪶 Small (300 MB – 1 GB)'},
-  {id:'onnx-community/Llama-3.2-1B-Instruct-q4f16',  label:'Llama 3.2 1B Instruct (q4f16)',                     mb:700, group:'🪶 Small (300 MB – 1 GB)'},
-  {id:'onnx-community/OLMo-2-0425-1B-Instruct',      label:'OLMo-2 1B Instruct — open-weights',                 mb:780, group:'🪶 Small (300 MB – 1 GB)'},
-  {id:'onnx-community/gemma-3-1b-it-ONNX',           label:'Gemma 3 1B IT — Google',                            mb:900, group:'🪶 Small (300 MB – 1 GB)'},
-  {id:'onnx-community/Falcon3-1B-Instruct-ONNX',     label:'Falcon3 1B Instruct',                               mb:900, group:'🪶 Small (300 MB – 1 GB)'},
-  {id:'onnx-community/granite-3.1-1b-a400m-instruct',label:'IBM Granite 3.1 1B (MoE 400M active)',              mb:950, group:'🪶 Small (300 MB – 1 GB)'},
+  {id:'onnx-community/Qwen2.5-0.5B-Instruct',        label:'Qwen2.5 0.5B Instruct — best tiny generalist',      mb:380, group:'🪶 Small (300 MB – 1 GB)', desc:'Compact generalist with solid everyday chat ability. Qwen family — strong multilingual coverage.', code:3, reason:2, speed:5},
+  {id:'Xenova/Qwen1.5-0.5B-Chat',                    label:'Qwen1.5 0.5B Chat',                                 mb:400, group:'🪶 Small (300 MB – 1 GB)', desc:'Compact generalist with solid everyday chat ability. Qwen family — strong multilingual coverage.', code:2, reason:2, speed:4},
+  {id:'onnx-community/Qwen3-0.6B-ONNX',              label:'Qwen3 0.6B — newest tiny (2025)',                   mb:500, group:'🪶 Small (300 MB – 1 GB)', desc:'Compact generalist with solid everyday chat ability. Qwen family — strong multilingual coverage.', code:3, reason:3, speed:4},
+  {id:'onnx-community/LFM2-700M-ONNX',               label:'Liquid LFM2 700M',                                  mb:600, group:'🪶 Small (300 MB – 1 GB)', desc:'Compact generalist with solid everyday chat ability. Liquid AI LFM2 — efficient state-space hybrid.', code:3, reason:3, speed:4},
+  {id:'onnx-community/Llama-3.2-1B-Instruct-q4f16',  label:'Llama 3.2 1B Instruct (q4f16)',                     mb:700, group:'🪶 Small (300 MB – 1 GB)', desc:'Compact generalist with solid everyday chat ability. Meta Llama lineage — versatile and well-supported.', code:4, reason:3, speed:4},
+  {id:'onnx-community/OLMo-2-0425-1B-Instruct',      label:'OLMo-2 1B Instruct — open-weights',                 mb:780, group:'🪶 Small (300 MB – 1 GB)', desc:'Compact generalist with solid everyday chat ability. AI2 OLMo — fully open weights and data.', code:3, reason:3, speed:4},
+  {id:'onnx-community/gemma-3-1b-it-ONNX',           label:'Gemma 3 1B IT — Google',                            mb:900, group:'🪶 Small (300 MB – 1 GB)', desc:'Compact generalist with solid everyday chat ability. Google Gemma family — efficient and well-aligned.', code:3, reason:3, speed:4},
+  {id:'onnx-community/Falcon3-1B-Instruct-ONNX',     label:'Falcon3 1B Instruct',                               mb:900, group:'🪶 Small (300 MB – 1 GB)', desc:'Compact generalist with solid everyday chat ability. TII Falcon — open multilingual model.', code:3, reason:3, speed:4},
+  {id:'onnx-community/granite-3.1-1b-a400m-instruct',label:'IBM Granite 3.1 1B (MoE 400M active)',              mb:950, group:'🪶 Small (300 MB – 1 GB)', desc:'Compact generalist with solid everyday chat ability. IBM Granite — enterprise-friendly open model.', code:3, reason:3, speed:4},
 
   /* ──────────────── ⭐ Medium (1 – 3 GB) ──────────────── */
-  {id:'onnx-community/TinyLlama-1.1B-Chat-v1.0',     label:'TinyLlama 1.1B Chat',                               mb:850, group:'⭐ Medium (1 – 3 GB)'},
-  {id:'onnx-community/SmolLM2-1.7B-Instruct',        label:'SmolLM2 1.7B Instruct',                             mb:1100,group:'⭐ Medium (1 – 3 GB)'},
-  {id:'onnx-community/Qwen2.5-1.5B-Instruct',        label:'Qwen2.5 1.5B Instruct',                             mb:1100,group:'⭐ Medium (1 – 3 GB)'},
-  {id:'onnx-community/Qwen3-1.7B-ONNX',              label:'Qwen3 1.7B — smartest small ⭐',                    mb:1200,group:'⭐ Medium (1 – 3 GB)'},
-  {id:'Xenova/Qwen1.5-1.8B-Chat',                    label:'Qwen1.5 1.8B Chat',                                 mb:1300,group:'⭐ Medium (1 – 3 GB)'},
-  {id:'onnx-community/granite-3.0-2b-instruct-ONNX', label:'IBM Granite 3.0 2B Instruct',                       mb:1500,group:'⭐ Medium (1 – 3 GB)'},
-  {id:'onnx-community/EXAONE-3.5-2.4B-Instruct',     label:'EXAONE 3.5 2.4B — LG bilingual',                    mb:1700,group:'⭐ Medium (1 – 3 GB)'},
-  {id:'onnx-community/Llama-3.2-3B-Instruct',        label:'Llama 3.2 3B Instruct',                             mb:2400,group:'⭐ Medium (1 – 3 GB)'},
-  {id:'onnx-community/Qwen2.5-3B-Instruct',          label:'Qwen2.5 3B Instruct',                               mb:2400,group:'⭐ Medium (1 – 3 GB)'},
-  {id:'onnx-community/Hermes-3-Llama-3.2-3B',        label:'Hermes 3 Llama 3.2 3B — fine-tuned',                mb:2400,group:'⭐ Medium (1 – 3 GB)'},
-  {id:'onnx-community/SmolLM3-3B-ONNX',              label:'SmolLM3 3B — newest SmolLM',                        mb:2500,group:'⭐ Medium (1 – 3 GB)'},
-  {id:'onnx-community/gemma-3-4b-it-ONNX',           label:'Gemma 3 4B IT — Google',                            mb:2600,group:'⭐ Medium (1 – 3 GB)'},
-  {id:'onnx-community/Qwen3-4B-ONNX',                label:'Qwen3 4B',                                          mb:2800,group:'⭐ Medium (1 – 3 GB)'},
-  {id:'onnx-community/Falcon3-3B-Instruct-ONNX',     label:'Falcon3 3B Instruct',                               mb:2200,group:'⭐ Medium (1 – 3 GB)'},
-  {id:'onnx-community/MiniCPM3-4B',                  label:'MiniCPM3 4B — strong small model',                  mb:2900,group:'⭐ Medium (1 – 3 GB)'},
+  {id:'onnx-community/TinyLlama-1.1B-Chat-v1.0',     label:'TinyLlama 1.1B Chat',                               mb:850, group:'⭐ Medium (1 – 3 GB)', desc:'Compact generalist with solid everyday chat ability. Meta Llama lineage — versatile and well-supported.', code:3, reason:3, speed:4},
+  {id:'onnx-community/SmolLM2-1.7B-Instruct',        label:'SmolLM2 1.7B Instruct',                             mb:1100,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Hugging Face SmolLM — purpose-built for tiny on-device chat.', code:3, reason:3, speed:4},
+  {id:'onnx-community/Qwen2.5-1.5B-Instruct',        label:'Qwen2.5 1.5B Instruct',                             mb:1100,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Qwen family — strong multilingual coverage.', code:4, reason:3, speed:4},
+  {id:'onnx-community/Qwen3-1.7B-ONNX',              label:'Qwen3 1.7B — smartest small ⭐',                    mb:1200,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Qwen family — strong multilingual coverage.', code:4, reason:4, speed:3},
+  {id:'Xenova/Qwen1.5-1.8B-Chat',                    label:'Qwen1.5 1.8B Chat',                                 mb:1300,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Qwen family — strong multilingual coverage.', code:3, reason:3, speed:3},
+  {id:'onnx-community/granite-3.0-2b-instruct-ONNX', label:'IBM Granite 3.0 2B Instruct',                       mb:1500,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. IBM Granite — enterprise-friendly open model.', code:4, reason:4, speed:3},
+  {id:'onnx-community/EXAONE-3.5-2.4B-Instruct',     label:'EXAONE 3.5 2.4B — LG bilingual',                    mb:1700,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. LG EXAONE — bilingual Korean/English.', code:4, reason:4, speed:3},
+  {id:'onnx-community/Llama-3.2-3B-Instruct',        label:'Llama 3.2 3B Instruct',                             mb:2400,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Meta Llama lineage — versatile and well-supported.', code:5, reason:4, speed:3},
+  {id:'onnx-community/Qwen2.5-3B-Instruct',          label:'Qwen2.5 3B Instruct',                               mb:2400,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Qwen family — strong multilingual coverage.', code:5, reason:4, speed:3},
+  {id:'onnx-community/Hermes-3-Llama-3.2-3B',        label:'Hermes 3 Llama 3.2 3B — fine-tuned',                mb:2400,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Meta Llama lineage — versatile and well-supported.', code:5, reason:4, speed:3},
+  {id:'onnx-community/SmolLM3-3B-ONNX',              label:'SmolLM3 3B — newest SmolLM',                        mb:2500,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Hugging Face SmolLM — purpose-built for tiny on-device chat.', code:4, reason:4, speed:2},
+  {id:'onnx-community/gemma-3-4b-it-ONNX',           label:'Gemma 3 4B IT — Google',                            mb:2600,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Google Gemma family — efficient and well-aligned.', code:4, reason:4, speed:2},
+  {id:'onnx-community/Qwen3-4B-ONNX',                label:'Qwen3 4B',                                          mb:2800,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Qwen family — strong multilingual coverage.', code:5, reason:5, speed:2},
+  {id:'onnx-community/Falcon3-3B-Instruct-ONNX',     label:'Falcon3 3B Instruct',                               mb:2200,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. TII Falcon — open multilingual model.', code:4, reason:4, speed:3},
+  {id:'onnx-community/MiniCPM3-4B',                  label:'MiniCPM3 4B — strong small model',                  mb:2900,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following.', code:4, reason:5, speed:2},
 
   /* ──────────────── 🏆 Large (4 GB+) ──────────────── */
-  {id:'onnx-community/Phi-4-mini-instruct-ONNX',     label:'Phi-4 Mini Instruct (3.8B)',                        mb:2400,group:'🏆 Large (4 GB+)'},
-  {id:'onnx-community/Mistral-7B-Instruct-v0.3',     label:'Mistral 7B Instruct v0.3',                          mb:4800,group:'🏆 Large (4 GB+)'},
-  {id:'onnx-community/Qwen2.5-7B-Instruct',          label:'Qwen2.5 7B Instruct',                               mb:5200,group:'🏆 Large (4 GB+)'},
-  {id:'onnx-community/Meta-Llama-3.1-8B-Instruct',   label:'Llama 3.1 8B Instruct',                             mb:5800,group:'🏆 Large (4 GB+)'},
-  {id:'onnx-community/Qwen3-8B-ONNX',                label:'Qwen3 8B',                                          mb:5800,group:'🏆 Large (4 GB+)'},
-  {id:'onnx-community/Falcon3-7B-Instruct-ONNX',     label:'Falcon3 7B Instruct',                               mb:5000,group:'🏆 Large (4 GB+)'},
+  {id:'onnx-community/Phi-4-mini-instruct-ONNX',     label:'Phi-4 Mini Instruct (3.8B)',                        mb:2400,group:'🏆 Large (4 GB+)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Microsoft Phi family — punches above its weight.', code:5, reason:5, speed:3},
+  {id:'onnx-community/Mistral-7B-Instruct-v0.3',     label:'Mistral 7B Instruct v0.3',                          mb:4800,group:'🏆 Large (4 GB+)', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. Mistral lineage — efficient and accurate.', code:4, reason:4, speed:2},
+  {id:'onnx-community/Qwen2.5-7B-Instruct',          label:'Qwen2.5 7B Instruct',                               mb:5200,group:'🏆 Large (4 GB+)', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. Qwen family — strong multilingual coverage.', code:5, reason:4, speed:1},
+  {id:'onnx-community/Meta-Llama-3.1-8B-Instruct',   label:'Llama 3.1 8B Instruct',                             mb:5800,group:'🏆 Large (4 GB+)', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. Meta Llama lineage — versatile and well-supported.', code:5, reason:4, speed:1},
+  {id:'onnx-community/Qwen3-8B-ONNX',                label:'Qwen3 8B',                                          mb:5800,group:'🏆 Large (4 GB+)', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. Qwen family — strong multilingual coverage.', code:5, reason:5, speed:1},
+  {id:'onnx-community/Falcon3-7B-Instruct-ONNX',     label:'Falcon3 7B Instruct',                               mb:5000,group:'🏆 Large (4 GB+)', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. TII Falcon — open multilingual model.', code:4, reason:4, speed:1},
 
   /* ──────────────── 🧠 Reasoning ──────────────── */
-  {id:'onnx-community/Phi-4-mini-reasoning-ONNX',          label:'Phi-4 Mini Reasoning (3.8B)',                 mb:2400,group:'🧠 Reasoning'},
-  {id:'onnx-community/Qwen3-4B-Thinking-2507-ONNX',        label:'Qwen3 4B Thinking',                            mb:2800,group:'🧠 Reasoning'},
-  {id:'onnx-community/DeepSeek-R1-Distill-Qwen-1.5B-ONNX', label:'DeepSeek-R1-Distill Qwen 1.5B',                mb:1100,group:'🧠 Reasoning'},
-  {id:'onnx-community/DeepSeek-R1-Distill-Qwen-7B-ONNX',   label:'DeepSeek-R1-Distill Qwen 7B',                  mb:5000,group:'🧠 Reasoning'},
-  {id:'onnx-community/DeepSeek-R1-Distill-Llama-8B-ONNX',  label:'DeepSeek-R1-Distill Llama 8B',                 mb:5800,group:'🧠 Reasoning'},
+  {id:'onnx-community/Phi-4-mini-reasoning-ONNX',          label:'Phi-4 Mini Reasoning (3.8B)',                 mb:2400,group:'🧠 Reasoning', desc:'Reasoning-focused model that produces explicit chain-of-thought. Microsoft Phi family — punches above its weight.', code:5, reason:5, speed:3},
+  {id:'onnx-community/Qwen3-4B-Thinking-2507-ONNX',        label:'Qwen3 4B Thinking',                            mb:2800,group:'🧠 Reasoning', desc:'Reasoning-focused model that produces explicit chain-of-thought. Qwen family — strong multilingual coverage.', code:5, reason:5, speed:2},
+  {id:'onnx-community/DeepSeek-R1-Distill-Qwen-1.5B-ONNX', label:'DeepSeek-R1-Distill Qwen 1.5B',                mb:1100,group:'🧠 Reasoning', desc:'Reasoning-focused model that produces explicit chain-of-thought. Qwen family — strong multilingual coverage.', code:3, reason:5, speed:4},
+  {id:'onnx-community/DeepSeek-R1-Distill-Qwen-7B-ONNX',   label:'DeepSeek-R1-Distill Qwen 7B',                  mb:5000,group:'🧠 Reasoning', desc:'Reasoning-focused model that produces explicit chain-of-thought. Qwen family — strong multilingual coverage.', code:4, reason:5, speed:1},
+  {id:'onnx-community/DeepSeek-R1-Distill-Llama-8B-ONNX',  label:'DeepSeek-R1-Distill Llama 8B',                 mb:5800,group:'🧠 Reasoning', desc:'Reasoning-focused model that produces explicit chain-of-thought. Meta Llama lineage — versatile and well-supported.', code:4, reason:5, speed:1},
 
   /* ──────────────── 💻 Coder ──────────────── */
-  {id:'onnx-community/Qwen2.5-Coder-0.5B-Instruct',  label:'Qwen2.5-Coder 0.5B',                                mb:400, group:'💻 Coder'},
-  {id:'onnx-community/Qwen2.5-Coder-1.5B-Instruct',  label:'Qwen2.5-Coder 1.5B',                                mb:1100,group:'💻 Coder'},
-  {id:'onnx-community/Yi-Coder-1.5B-Chat',           label:'Yi-Coder 1.5B Chat',                                mb:1100,group:'💻 Coder'},
-  {id:'onnx-community/Qwen2.5-Coder-3B-Instruct',    label:'Qwen2.5-Coder 3B',                                  mb:2400,group:'💻 Coder'},
-  {id:'onnx-community/Qwen2.5-Coder-7B-Instruct',    label:'Qwen2.5-Coder 7B',                                  mb:5200,group:'💻 Coder'},
+  {id:'onnx-community/Qwen2.5-Coder-0.5B-Instruct',  label:'Qwen2.5-Coder 0.5B',                                mb:400, group:'💻 Coder', desc:'Specialized for code generation, completion, and debugging. Qwen family — strong multilingual coverage.', code:4, reason:1, speed:4},
+  {id:'onnx-community/Qwen2.5-Coder-1.5B-Instruct',  label:'Qwen2.5-Coder 1.5B',                                mb:1100,group:'💻 Coder', desc:'Specialized for code generation, completion, and debugging. Qwen family — strong multilingual coverage.', code:5, reason:2, speed:4},
+  {id:'onnx-community/Yi-Coder-1.5B-Chat',           label:'Yi-Coder 1.5B Chat',                                mb:1100,group:'💻 Coder', desc:'Specialized for code generation, completion, and debugging.', code:5, reason:2, speed:4},
+  {id:'onnx-community/Qwen2.5-Coder-3B-Instruct',    label:'Qwen2.5-Coder 3B',                                  mb:2400,group:'💻 Coder', desc:'Specialized for code generation, completion, and debugging. Qwen family — strong multilingual coverage.', code:5, reason:3, speed:3},
+  {id:'onnx-community/Qwen2.5-Coder-7B-Instruct',    label:'Qwen2.5-Coder 7B',                                  mb:5200,group:'💻 Coder', desc:'Specialized for code generation, completion, and debugging. Qwen family — strong multilingual coverage.', code:5, reason:3, speed:1},
 
   /* ──────────────── 🔢 Math ──────────────── */
-  {id:'onnx-community/Qwen2.5-Math-1.5B-Instruct',   label:'Qwen2.5-Math 1.5B',                                 mb:1100,group:'🔢 Math'},
-  {id:'onnx-community/Qwen2.5-Math-7B-Instruct',     label:'Qwen2.5-Math 7B',                                   mb:5200,group:'🔢 Math'},
+  {id:'onnx-community/Qwen2.5-Math-1.5B-Instruct',   label:'Qwen2.5-Math 1.5B',                                 mb:1100,group:'🔢 Math', desc:'Tuned for mathematical reasoning and step-by-step problem solving. Qwen family — strong multilingual coverage.', code:2, reason:5, speed:4},
+  {id:'onnx-community/Qwen2.5-Math-7B-Instruct',     label:'Qwen2.5-Math 7B',                                   mb:5200,group:'🔢 Math', desc:'Tuned for mathematical reasoning and step-by-step problem solving. Qwen family — strong multilingual coverage.', code:3, reason:5, speed:1},
 
   /* ──────────────── 🌍 Multilingual ──────────────── */
-  {id:'Xenova/nllb-200-distilled-600M',              label:'NLLB-200 600M — 200-lang translation',              mb:600, group:'🌍 Multilingual'},
-  {id:'Xenova/m2m100_418M',                          label:'M2M-100 418M — 100-lang translation',               mb:420, group:'🌍 Multilingual'},
+  {id:'Xenova/nllb-200-distilled-600M',              label:'NLLB-200 600M — 200-lang translation',              mb:600, group:'🌍 Multilingual', desc:'Multilingual model strong at translation and cross-lingual chat.', code:2, reason:2, speed:4},
+  {id:'Xenova/m2m100_418M',                          label:'M2M-100 418M — 100-lang translation',               mb:420, group:'🌍 Multilingual', desc:'Multilingual model strong at translation and cross-lingual chat.', code:1, reason:1, speed:4},
+  {id:'Xenova/madlad400-3b-mt',                      label:'MADLAD-400 3B — 400-lang translation',              mb:2400,group:'🌍 Multilingual', desc:'Multilingual model strong at translation and cross-lingual chat.', code:3, reason:3, speed:3},
+  {id:'onnx-community/aya-expanse-8b',               label:'Aya Expanse 8B — 23-lang Cohere',                   mb:5400,group:'🌍 Multilingual', desc:'Large, capable generalist suited to nuanced conversation and complex tasks.', code:4, reason:4, speed:1},
+  {id:'onnx-community/SeaLLMs-v3-1.5B-Chat',         label:'SeaLLMs v3 1.5B — SE Asian',                        mb:1100,group:'🌍 Multilingual', desc:'Multilingual model strong at translation and cross-lingual chat.', code:3, reason:3, speed:4},
+  {id:'onnx-community/SeaLLMs-v3-7B-Chat',           label:'SeaLLMs v3 7B — SE Asian',                          mb:5200,group:'🌍 Multilingual', desc:'Multilingual model strong at translation and cross-lingual chat.', code:4, reason:4, speed:1},
+
+  /* ──────────────── ⚡ Ultra-light (<300 MB) — extra ──────────────── */
+  {id:'Xenova/distilgpt2',                           label:'DistilGPT-2 — classic tiny',                        mb:90,  group:'⚡ Ultra-light (<300 MB)', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device.', code:1, reason:1, speed:5},
+  {id:'Xenova/gpt2',                                 label:'GPT-2 124M — original',                             mb:140, group:'⚡ Ultra-light (<300 MB)', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device.', code:1, reason:1, speed:5},
+  {id:'onnx-community/SmolLM-135M-Instruct',         label:'SmolLM 135M Instruct (v1)',                         mb:110, group:'⚡ Ultra-light (<300 MB)', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device. Hugging Face SmolLM — purpose-built for tiny on-device chat.', code:1, reason:1, speed:5},
+  {id:'onnx-community/SmolLM-360M-Instruct',         label:'SmolLM 360M Instruct (v1)',                         mb:260, group:'⚡ Ultra-light (<300 MB)', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device. Hugging Face SmolLM — purpose-built for tiny on-device chat.', code:2, reason:2, speed:4},
+  {id:'onnx-community/Qwen2-0.5B-Instruct',          label:'Qwen2 0.5B Instruct',                               mb:380, group:'⚡ Ultra-light (<300 MB)', desc:'Compact generalist with solid everyday chat ability. Qwen family — strong multilingual coverage.', code:2, reason:2, speed:4},
+
+  /* ──────────────── 🪶 Small (300 MB – 1 GB) — extra ──────────────── */
+  {id:'onnx-community/Qwen2-1.5B-Instruct',          label:'Qwen2 1.5B Instruct',                               mb:1000,group:'🪶 Small (300 MB – 1 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Qwen family — strong multilingual coverage.', code:3, reason:3, speed:4},
+  {id:'onnx-community/SmolLM-1.7B-Instruct',         label:'SmolLM 1.7B Instruct (v1)',                         mb:1100,group:'🪶 Small (300 MB – 1 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Hugging Face SmolLM — purpose-built for tiny on-device chat.', code:3, reason:3, speed:4},
+  {id:'onnx-community/gemma-2-2b-it',                label:'Gemma 2 2B IT — Google',                            mb:1600,group:'🪶 Small (300 MB – 1 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Google Gemma family — efficient and well-aligned.', code:4, reason:4, speed:3},
+  {id:'onnx-community/granite-3.1-2b-instruct-ONNX', label:'IBM Granite 3.1 2B Instruct',                       mb:1500,group:'🪶 Small (300 MB – 1 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. IBM Granite — enterprise-friendly open model.', code:4, reason:4, speed:3},
+  {id:'onnx-community/internlm2_5-1_8b-chat',        label:'InternLM 2.5 1.8B Chat',                            mb:1200,group:'🪶 Small (300 MB – 1 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following.', code:3, reason:3, speed:3},
+
+  /* ──────────────── ⭐ Medium (1 – 3 GB) — extra ──────────────── */
+  {id:'onnx-community/Phi-3.5-mini-instruct',        label:'Phi-3.5 Mini Instruct (3.8B)',                      mb:2400,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Microsoft Phi family — punches above its weight.', code:4, reason:4, speed:3},
+  {id:'onnx-community/Phi-3-mini-4k-instruct',       label:'Phi-3 Mini 4K Instruct (3.8B)',                     mb:2400,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Microsoft Phi family — punches above its weight.', code:4, reason:4, speed:3},
+  {id:'onnx-community/Phi-3-mini-128k-instruct',     label:'Phi-3 Mini 128K Instruct',                          mb:2400,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Microsoft Phi family — punches above its weight.', code:4, reason:4, speed:3},
+  {id:'onnx-community/granite-3.0-3b-a800m-instruct',label:'IBM Granite 3.0 3B (MoE 800M)',                     mb:2000,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. IBM Granite — enterprise-friendly open model.', code:4, reason:4, speed:3},
+  {id:'onnx-community/granite-3.1-3b-a800m-instruct',label:'IBM Granite 3.1 3B (MoE 800M)',                     mb:2000,group:'⭐ Medium (1 – 3 GB)', desc:'Balanced mid-size model with broad knowledge and good instruction-following. IBM Granite — enterprise-friendly open model.', code:4, reason:4, speed:3},
+
+  /* ──────────────── 🏆 Large (4 GB+) — extra ──────────────── */
+  {id:'onnx-community/Meta-Llama-3-8B-Instruct',     label:'Llama 3 8B Instruct',                               mb:5800,group:'🏆 Large (4 GB+)', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. Meta Llama lineage — versatile and well-supported.', code:5, reason:4, speed:1},
+  {id:'onnx-community/Mistral-7B-Instruct-v0.2',     label:'Mistral 7B Instruct v0.2',                          mb:4800,group:'🏆 Large (4 GB+)', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. Mistral lineage — efficient and accurate.', code:4, reason:4, speed:2},
+  {id:'onnx-community/Mistral-Nemo-Instruct-2407',   label:'Mistral Nemo 12B Instruct',                         mb:8200,group:'🏆 Large (4 GB+)', desc:'Heavyweight model offering near-frontier quality — needs significant RAM. Mistral lineage — efficient and accurate.', code:5, reason:5, speed:1},
+  {id:'onnx-community/gemma-2-9b-it',                label:'Gemma 2 9B IT — Google',                            mb:6400,group:'🏆 Large (4 GB+)', desc:'Heavyweight model offering near-frontier quality — needs significant RAM. Google Gemma family — efficient and well-aligned.', code:4, reason:4, speed:1},
+  {id:'onnx-community/Yi-1.5-6B-Chat',               label:'Yi 1.5 6B Chat',                                    mb:4200,group:'🏆 Large (4 GB+)', desc:'Large, capable generalist suited to nuanced conversation and complex tasks.', code:4, reason:4, speed:2},
+  {id:'onnx-community/Yi-1.5-9B-Chat',               label:'Yi 1.5 9B Chat',                                    mb:6400,group:'🏆 Large (4 GB+)', desc:'Heavyweight model offering near-frontier quality — needs significant RAM.', code:4, reason:4, speed:1},
+  {id:'onnx-community/granite-3.1-8b-instruct',      label:'IBM Granite 3.1 8B Instruct',                       mb:5600,group:'🏆 Large (4 GB+)', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. IBM Granite — enterprise-friendly open model.', code:4, reason:4, speed:1},
+  {id:'onnx-community/Falcon3-10B-Instruct-ONNX',    label:'Falcon3 10B Instruct',                              mb:7200,group:'🏆 Large (4 GB+)', desc:'Heavyweight model offering near-frontier quality — needs significant RAM. TII Falcon — open multilingual model.', code:5, reason:5, speed:1},
+  {id:'onnx-community/EXAONE-3.5-7.8B-Instruct',     label:'EXAONE 3.5 7.8B — LG bilingual',                    mb:5500,group:'🏆 Large (4 GB+)', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. LG EXAONE — bilingual Korean/English.', code:4, reason:4, speed:1},
+  {id:'onnx-community/internlm2_5-7b-chat',          label:'InternLM 2.5 7B Chat',                              mb:5000,group:'🏆 Large (4 GB+)', desc:'Large, capable generalist suited to nuanced conversation and complex tasks.', code:4, reason:4, speed:1},
+  {id:'onnx-community/Hermes-3-Llama-3.1-8B',        label:'Hermes 3 Llama 3.1 8B — fine-tuned',                mb:5800,group:'🏆 Large (4 GB+)', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. Meta Llama lineage — versatile and well-supported.', code:5, reason:4, speed:1},
+  {id:'onnx-community/c4ai-command-r7b-12-2024',     label:'Command R 7B — Cohere (Dec 2024)',                  mb:5000,group:'🏆 Large (4 GB+)', desc:'Large, capable generalist suited to nuanced conversation and complex tasks.', code:4, reason:4, speed:1},
+
+  /* ──────────────── 🧠 Reasoning — extra ──────────────── */
+  {id:'onnx-community/DeepSeek-R1-Distill-Qwen-14B-ONNX', label:'DeepSeek-R1-Distill Qwen 14B',                 mb:9000,group:'🧠 Reasoning', desc:'Reasoning-focused model that produces explicit chain-of-thought. Qwen family — strong multilingual coverage.', code:5, reason:5, speed:1},
+  {id:'onnx-community/Qwen3-14B-ONNX',               label:'Qwen3 14B',                                         mb:9000,group:'🧠 Reasoning', desc:'Heavyweight model offering near-frontier quality — needs significant RAM. Qwen family — strong multilingual coverage.', code:5, reason:5, speed:1},
+  {id:'onnx-community/QwQ-32B-Preview',              label:'QwQ 32B Preview — deep thinking',                   mb:18000,group:'🧠 Reasoning', desc:'Reasoning-focused model that produces explicit chain-of-thought.', code:5, reason:5, speed:1},
+  {id:'onnx-community/Marco-o1',                     label:'Marco-o1 — Alibaba o1-style',                       mb:5000,group:'🧠 Reasoning', desc:'Large, capable generalist suited to nuanced conversation and complex tasks.', code:4, reason:5, speed:1},
+  {id:'onnx-community/Qwen3-1.7B-Thinking-2507-ONNX',label:'Qwen3 1.7B Thinking',                               mb:1200,group:'🧠 Reasoning', desc:'Reasoning-focused model that produces explicit chain-of-thought. Qwen family — strong multilingual coverage.', code:4, reason:5, speed:3},
+
+  /* ──────────────── 💻 Coder — extra ──────────────── */
+  {id:'onnx-community/Qwen2.5-Coder-14B-Instruct',   label:'Qwen2.5-Coder 14B',                                 mb:9000,group:'💻 Coder', desc:'Specialized for code generation, completion, and debugging. Qwen family — strong multilingual coverage.', code:5, reason:4, speed:1},
+  {id:'onnx-community/Qwen2.5-Coder-32B-Instruct',   label:'Qwen2.5-Coder 32B — SOTA open coder',               mb:18000,group:'💻 Coder', desc:'Specialized for code generation, completion, and debugging. Qwen family — strong multilingual coverage.', code:5, reason:4, speed:1},
+  {id:'onnx-community/OpenCoder-1.5B-Instruct',      label:'OpenCoder 1.5B Instruct',                           mb:1100,group:'💻 Coder', desc:'Specialized for code generation, completion, and debugging.', code:5, reason:2, speed:4},
+  {id:'onnx-community/OpenCoder-8B-Instruct',        label:'OpenCoder 8B Instruct',                             mb:5600,group:'💻 Coder', desc:'Specialized for code generation, completion, and debugging.', code:5, reason:3, speed:1},
+  {id:'onnx-community/Yi-Coder-9B-Chat',             label:'Yi-Coder 9B Chat',                                  mb:6400,group:'💻 Coder', desc:'Specialized for code generation, completion, and debugging.', code:5, reason:3, speed:1},
+
+  /* ──────────────── 🔢 Math — extra ──────────────── */
+  {id:'onnx-community/AceMath-7B-Instruct',          label:'AceMath 7B Instruct — Nvidia',                      mb:5200,group:'🔢 Math', desc:'Tuned for mathematical reasoning and step-by-step problem solving.', code:3, reason:5, speed:1},
+  {id:'onnx-community/Mathstral-7B-v0.1',            label:'Mathstral 7B — Mistral math',                       mb:5000,group:'🔢 Math', desc:'Tuned for mathematical reasoning and step-by-step problem solving. Mistral lineage — efficient and accurate.', code:3, reason:5, speed:1},
+
+  /* ── 36 additional verified browser ONNX models ── */
+  {id:'onnx-community/Falcon-H1-Tiny-90M-Instruct-ONNX', label:'Falcon H1 Tiny 90M — ultra-fast instruct', mb:95, group:'✨ New offline models', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device. TII Falcon — open multilingual model.', code:1, reason:1, speed:5},
+  {id:'onnx-community/Falcon-H1-Tiny-Multilingual-100M-Instruct-ONNX', label:'Falcon H1 Tiny 100M — multilingual', mb:110, group:'✨ New offline models', desc:'Multilingual model strong at translation and cross-lingual chat. TII Falcon — open multilingual model.', code:1, reason:1, speed:5},
+  {id:'onnx-community/Falcon-H1-Tiny-Coder-90M-ONNX', label:'Falcon H1 Tiny Coder 90M', mb:95, group:'✨ New offline models', desc:'Specialized for code generation, completion, and debugging. TII Falcon — open multilingual model.', code:3, reason:1, speed:5},
+  {id:'onnx-community/Falcon-H1-Tiny-Tool-Calling-90M-ONNX', label:'Falcon H1 Tiny Tool Calling 90M', mb:95, group:'✨ New offline models', desc:'Trained for tool/function calling and agentic workflows. TII Falcon — open multilingual model.', code:1, reason:1, speed:5},
+  {id:'onnx-community/Supra-1.5-50M-Instruct-exp-ONNX', label:'Supra 1.5 50M Instruct — experimental', mb:65, group:'✨ New offline models', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device.', code:1, reason:1, speed:5},
+  {id:'onnx-community/Supra-50M-Reasoning-ONNX', label:'Supra 50M Reasoning — tiny thinker', mb:65, group:'✨ New offline models', desc:'Reasoning-focused model that produces explicit chain-of-thought.', code:1, reason:3, speed:5},
+  {id:'onnx-community/TinyStories-Instruct-33M-ONNX', label:'TinyStories Instruct 33M', mb:45, group:'✨ New offline models', desc:'Storytelling-oriented small model — fluent prose, light reasoning.', code:1, reason:1, speed:5},
+  {id:'onnx-community/SmolLM2-135M-Instruct-ONNX', label:'SmolLM2 135M Instruct — ONNX edition', mb:110, group:'✨ New offline models', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device. Hugging Face SmolLM — purpose-built for tiny on-device chat.', code:1, reason:1, speed:5},
+  {id:'onnx-community/SmolLM2-135M-humanized-ONNX', label:'SmolLM2 135M Humanized', mb:110, group:'✨ New offline models', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device. Hugging Face SmolLM — purpose-built for tiny on-device chat.', code:1, reason:1, speed:5},
+  {id:'onnx-community/Biggie-SmoLlm-0.4B-ONNX', label:'Biggie SmoLLM 0.4B', mb:310, group:'✨ New offline models', desc:'Compact generalist with solid everyday chat ability. Hugging Face SmolLM — purpose-built for tiny on-device chat.', code:2, reason:2, speed:4},
+  {id:'onnx-community/TinyMistral-248M-Chat-v3-ONNX', label:'TinyMistral 248M Chat v3', mb:220, group:'✨ New offline models', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device. Mistral lineage — efficient and accurate.', code:2, reason:2, speed:5},
+  {id:'onnx-community/TinyMistral-248M-Chat-v4-ONNX', label:'TinyMistral 248M Chat v4', mb:220, group:'✨ New offline models', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device. Mistral lineage — efficient and accurate.', code:2, reason:2, speed:5},
+  {id:'onnx-community/jais-family-590m-chat', label:'JAIS 590M Chat — Arabic & English', mb:500, group:'✨ New offline models', desc:'Multilingual model strong at translation and cross-lingual chat.', code:2, reason:2, speed:4},
+  {id:'onnx-community/llm-jp-3-150m-instruct2-ONNX', label:'LLM-jp 3 150M Instruct 2 — Japanese', mb:135, group:'✨ New offline models', desc:'Multilingual model strong at translation and cross-lingual chat.', code:1, reason:1, speed:5},
+  {id:'onnx-community/llm-jp-3-150m-instruct3-ONNX', label:'LLM-jp 3 150M Instruct 3 — Japanese', mb:135, group:'✨ New offline models', desc:'Multilingual model strong at translation and cross-lingual chat.', code:1, reason:1, speed:5},
+  {id:'onnx-community/Qwen3-0.6B-Instruct-ONNX', label:'Qwen3 0.6B Instruct', mb:500, group:'✨ New offline models', desc:'Compact generalist with solid everyday chat ability. Qwen family — strong multilingual coverage.', code:3, reason:3, speed:4},
+  {id:'onnx-community/Qwen3.5-0.8B-ONNX', label:'Qwen3.5 0.8B — latest compact Qwen', mb:650, group:'✨ New offline models', desc:'Compact generalist with solid everyday chat ability. Qwen family — strong multilingual coverage.', code:4, reason:4, speed:4},
+  {id:'onnx-community/Qwen3.5-0.8B-Text-ONNX', label:'Qwen3.5 0.8B Text', mb:650, group:'✨ New offline models', desc:'Compact generalist with solid everyday chat ability. Qwen family — strong multilingual coverage.', code:4, reason:4, speed:4},
+  {id:'onnx-community/LFM2.5-350M-ONNX', label:'Liquid LFM2.5 350M', mb:300, group:'✨ New offline models', desc:'Compact generalist with solid everyday chat ability. Liquid AI LFM2 — efficient state-space hybrid.', code:2, reason:2, speed:4},
+  {id:'onnx-community/LFM2-1.2B-ONNX', label:'Liquid LFM2 1.2B', mb:900, group:'✨ New offline models', desc:'Compact generalist with solid everyday chat ability. Liquid AI LFM2 — efficient state-space hybrid.', code:3, reason:3, speed:4},
+  {id:'onnx-community/LFM2-2.6B-ONNX', label:'Liquid LFM2 2.6B', mb:1900, group:'✨ New offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Liquid AI LFM2 — efficient state-space hybrid.', code:4, reason:4, speed:3},
+  {id:'onnx-community/LFM2-350M-Extract-ONNX', label:'Liquid LFM2 350M Extract — structured data', mb:300, group:'✨ New offline models', desc:'Specialized for structured data extraction from text. Liquid AI LFM2 — efficient state-space hybrid.', code:1, reason:2, speed:4},
+  {id:'onnx-community/LFM2-350M-Math-ONNX', label:'Liquid LFM2 350M Math', mb:300, group:'✨ New offline models', desc:'Tuned for mathematical reasoning and step-by-step problem solving. Liquid AI LFM2 — efficient state-space hybrid.', code:1, reason:4, speed:4},
+  {id:'onnx-community/LFM2-1.2B-Extract-ONNX', label:'Liquid LFM2 1.2B Extract', mb:900, group:'✨ New offline models', desc:'Specialized for structured data extraction from text. Liquid AI LFM2 — efficient state-space hybrid.', code:2, reason:3, speed:4},
+  {id:'onnx-community/LFM2-1.2B-RAG-ONNX', label:'Liquid LFM2 1.2B RAG', mb:900, group:'✨ New offline models', desc:'Optimized for retrieval-augmented generation pipelines. Liquid AI LFM2 — efficient state-space hybrid.', code:2, reason:3, speed:4},
+  {id:'onnx-community/LFM2-1.2B-Tool-ONNX', label:'Liquid LFM2 1.2B Tool Calling', mb:900, group:'✨ New offline models', desc:'Trained for tool/function calling and agentic workflows. Liquid AI LFM2 — efficient state-space hybrid.', code:2, reason:3, speed:4},
+  {id:'onnx-community/deepseek-coder-1.3b-instruct-ONNX', label:'DeepSeek Coder 1.3B Instruct', mb:1000, group:'✨ New offline models', desc:'Specialized for code generation, completion, and debugging. DeepSeek — research-grade open weights.', code:5, reason:2, speed:4},
+  {id:'onnx-community/glm-edge-1.5b-chat-ONNX', label:'GLM Edge 1.5B Chat', mb:1100, group:'✨ New offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following.', code:3, reason:3, speed:4},
+  {id:'onnx-community/TinySwallow-1.5B-Instruct-ONNX', label:'TinySwallow 1.5B Instruct — Japanese', mb:1100, group:'✨ New offline models', desc:'Multilingual model strong at translation and cross-lingual chat.', code:3, reason:3, speed:4},
+  {id:'onnx-community/granite-4.0-h-350m-ONNX', label:'IBM Granite 4.0 H 350M', mb:300, group:'✨ New offline models', desc:'Compact generalist with solid everyday chat ability. IBM Granite — enterprise-friendly open model.', code:2, reason:2, speed:4},
+  {id:'onnx-community/granite-4.0-h-micro-ONNX', label:'IBM Granite 4.0 H Micro', mb:450, group:'✨ New offline models', desc:'Compact generalist with solid everyday chat ability. IBM Granite — enterprise-friendly open model.', code:2, reason:2, speed:4},
+  {id:'onnx-community/granite-4.0-h-1b-ONNX', label:'IBM Granite 4.0 H 1B', mb:800, group:'✨ New offline models', desc:'Compact generalist with solid everyday chat ability. IBM Granite — enterprise-friendly open model.', code:3, reason:3, speed:4},
+  {id:'onnx-community/Qwen3.5-2B-ONNX', label:'Qwen3.5 2B', mb:1500, group:'✨ New offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Qwen family — strong multilingual coverage.', code:5, reason:5, speed:3},
+  {id:'onnx-community/Qwen3-4B-Instruct-2507-ONNX', label:'Qwen3 4B Instruct 2507', mb:2800, group:'✨ New offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Qwen family — strong multilingual coverage.', code:5, reason:5, speed:2},
+  {id:'onnx-community/Qwen3.5-4B-ONNX', label:'Qwen3.5 4B', mb:2900, group:'✨ New offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Qwen family — strong multilingual coverage.', code:5, reason:5, speed:2},
+  {id:'onnx-community/granite-4.0-micro-ONNX', label:'IBM Granite 4.0 Micro', mb:2200, group:'✨ New offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following. IBM Granite — enterprise-friendly open model.', code:4, reason:4, speed:3},
+
+  /* ── 55 additional offline ONNX models ── */
+  {id:'onnx-community/gemma-3-270m-it-ONNX', label:'Gemma 3 270M Instruct — ultra tiny', mb:230, group:'🆕 Extra offline models', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device. Google Gemma family — efficient and well-aligned.', code:2, reason:2, speed:5},
+  {id:'onnx-community/gemma-3n-E2B-it-ONNX', label:'Gemma 3n E2B Instruct', mb:1700, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Google Gemma family — efficient and well-aligned.', code:4, reason:4, speed:3},
+  {id:'onnx-community/gemma-3n-E4B-it-ONNX', label:'Gemma 3n E4B Instruct', mb:3200, group:'🆕 Extra offline models', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. Google Gemma family — efficient and well-aligned.', code:4, reason:4, speed:2},
+  {id:'onnx-community/Llama-3.2-1B-Instruct', label:'Llama 3.2 1B Instruct', mb:900, group:'🆕 Extra offline models', desc:'Compact generalist with solid everyday chat ability. Meta Llama lineage — versatile and well-supported.', code:4, reason:3, speed:4},
+  {id:'onnx-community/Llama-Guard-3-1B', label:'Llama Guard 3 1B — safety classifier', mb:900, group:'🆕 Extra offline models', desc:'Safety classifier for moderating prompts and responses. Meta Llama lineage — versatile and well-supported.', code:2, reason:2, speed:4},
+  {id:'onnx-community/Llama-3.1-Nemotron-Nano-4B-v1.1-ONNX', label:'Nemotron Nano 4B v1.1', mb:2900, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Meta Llama lineage — versatile and well-supported.', code:5, reason:4, speed:2},
+  {id:'onnx-community/Nemotron-Mini-4B-Instruct', label:'Nemotron Mini 4B Instruct', mb:2900, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following.', code:4, reason:4, speed:2},
+  {id:'onnx-community/granite-3.2-2b-instruct-ONNX', label:'IBM Granite 3.2 2B Instruct', mb:1500, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following. IBM Granite — enterprise-friendly open model.', code:4, reason:4, speed:3},
+  {id:'onnx-community/granite-3.2-8b-instruct-ONNX', label:'IBM Granite 3.2 8B Instruct', mb:5200, group:'🆕 Extra offline models', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. IBM Granite — enterprise-friendly open model.', code:4, reason:4, speed:1},
+  {id:'onnx-community/granite-3.3-2b-instruct-ONNX', label:'IBM Granite 3.3 2B Instruct', mb:1500, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following. IBM Granite — enterprise-friendly open model.', code:4, reason:4, speed:3},
+  {id:'onnx-community/granite-3.3-8b-instruct-ONNX', label:'IBM Granite 3.3 8B Instruct', mb:5200, group:'🆕 Extra offline models', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. IBM Granite — enterprise-friendly open model.', code:4, reason:4, speed:1},
+  {id:'onnx-community/Phi-4-ONNX', label:'Microsoft Phi-4 14B', mb:9000, group:'🆕 Extra offline models', desc:'Heavyweight model offering near-frontier quality — needs significant RAM. Microsoft Phi family — punches above its weight.', code:5, reason:5, speed:1},
+  {id:'onnx-community/Phi-3.5-mini-instruct-onnx-web', label:'Phi 3.5 Mini Instruct (Web)', mb:2200, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Microsoft Phi family — punches above its weight.', code:4, reason:4, speed:3},
+  {id:'onnx-community/EXAONE-Deep-2.4B-ONNX', label:'EXAONE Deep 2.4B — reasoning', mb:1800, group:'🆕 Extra offline models', desc:'Reasoning-focused model that produces explicit chain-of-thought. LG EXAONE — bilingual Korean/English.', code:4, reason:5, speed:3},
+  {id:'onnx-community/EXAONE-Deep-7.8B-ONNX', label:'EXAONE Deep 7.8B — reasoning', mb:5200, group:'🆕 Extra offline models', desc:'Reasoning-focused model that produces explicit chain-of-thought. LG EXAONE — bilingual Korean/English.', code:4, reason:5, speed:1},
+  {id:'onnx-community/EXAONE-3.5-32B-Instruct', label:'EXAONE 3.5 32B Instruct', mb:18000, group:'🆕 Extra offline models', desc:'Heavyweight model offering near-frontier quality — needs significant RAM. LG EXAONE — bilingual Korean/English.', code:5, reason:5, speed:1},
+  {id:'onnx-community/MobileLLM-125M', label:'Meta MobileLLM 125M', mb:110, group:'🆕 Extra offline models', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device.', code:1, reason:1, speed:5},
+  {id:'onnx-community/MobileLLM-350M', label:'Meta MobileLLM 350M', mb:300, group:'🆕 Extra offline models', desc:'Compact generalist with solid everyday chat ability.', code:2, reason:2, speed:4},
+  {id:'onnx-community/MobileLLM-600M', label:'Meta MobileLLM 600M', mb:500, group:'🆕 Extra offline models', desc:'Compact generalist with solid everyday chat ability.', code:2, reason:2, speed:4},
+  {id:'onnx-community/MobileLLM-1B', label:'Meta MobileLLM 1B', mb:800, group:'🆕 Extra offline models', desc:'Compact generalist with solid everyday chat ability.', code:3, reason:3, speed:4},
+  {id:'onnx-community/MobileLLM-1.5B', label:'Meta MobileLLM 1.5B', mb:1200, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following.', code:3, reason:3, speed:3},
+  {id:'onnx-community/Index-1.9B-Chat-ONNX', label:'Index 1.9B Chat', mb:1400, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following.', code:3, reason:3, speed:3},
+  {id:'onnx-community/Index-1.9B-Character-ONNX', label:'Index 1.9B Character — roleplay', mb:1400, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following.', code:3, reason:3, speed:3},
+  {id:'onnx-community/MiniCPM-1B-sft-bf16-ONNX', label:'MiniCPM 1B SFT', mb:900, group:'🆕 Extra offline models', desc:'Compact generalist with solid everyday chat ability.', code:3, reason:4, speed:4},
+  {id:'onnx-community/MiniCPM-2B-dpo-ONNX', label:'MiniCPM 2B DPO', mb:1700, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following.', code:4, reason:5, speed:3},
+  {id:'onnx-community/MiniCPM-S-1B-sft-ONNX', label:'MiniCPM-S 1B SFT — sparse', mb:850, group:'🆕 Extra offline models', desc:'Compact generalist with solid everyday chat ability.', code:3, reason:4, speed:4},
+  {id:'onnx-community/h2o-danube3-500m-chat-ONNX', label:'H2O Danube3 500M Chat', mb:450, group:'🆕 Extra offline models', desc:'Compact generalist with solid everyday chat ability.', code:2, reason:2, speed:4},
+  {id:'onnx-community/h2o-danube3-4b-chat-ONNX', label:'H2O Danube3 4B Chat', mb:2800, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following.', code:4, reason:4, speed:2},
+  {id:'onnx-community/h2o-danube2-1.8b-chat-ONNX', label:'H2O Danube2 1.8B Chat', mb:1300, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following.', code:3, reason:3, speed:3},
+  {id:'onnx-community/AMD-OLMo-1B-SFT', label:'AMD OLMo 1B SFT', mb:900, group:'🆕 Extra offline models', desc:'Compact generalist with solid everyday chat ability. AI2 OLMo — fully open weights and data.', code:3, reason:3, speed:4},
+  {id:'onnx-community/AMD-Llama-135m', label:'AMD Llama 135M', mb:120, group:'🆕 Extra offline models', desc:'Ultra-light generalist — loads instantly, great for quick chat on any device. Meta Llama lineage — versatile and well-supported.', code:1, reason:1, speed:5},
+  {id:'onnx-community/AMD-Llama-135m-code', label:'AMD Llama 135M Code', mb:120, group:'🆕 Extra offline models', desc:'Specialized for code generation, completion, and debugging. Meta Llama lineage — versatile and well-supported.', code:3, reason:1, speed:5},
+  {id:'onnx-community/Hermes-2-Pro-Llama-3-8B', label:'Hermes 2 Pro Llama 3 8B', mb:5200, group:'🆕 Extra offline models', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. Meta Llama lineage — versatile and well-supported.', code:5, reason:4, speed:1},
+  {id:'onnx-community/Hermes-2-Theta-Llama-3-8B', label:'Hermes 2 Theta Llama 3 8B', mb:5200, group:'🆕 Extra offline models', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. Meta Llama lineage — versatile and well-supported.', code:5, reason:4, speed:1},
+  {id:'onnx-community/DeepHermes-3-Llama-3-8B-Preview-ONNX', label:'DeepHermes 3 Llama-3 8B', mb:5200, group:'🆕 Extra offline models', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. Meta Llama lineage — versatile and well-supported.', code:5, reason:4, speed:1},
+  {id:'onnx-community/aya-23-8B-ONNX', label:'Cohere Aya 23 8B — multilingual', mb:5300, group:'🆕 Extra offline models', desc:'Multilingual model strong at translation and cross-lingual chat.', code:4, reason:4, speed:1},
+  {id:'onnx-community/Mistral-Nemo-Minitron-2B-128k-Instruct', label:'Mistral Nemo Minitron 2B 128k', mb:1500, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Mistral lineage — efficient and accurate.', code:4, reason:4, speed:3},
+  {id:'onnx-community/Mistral-Small-24B-Instruct-2501-ONNX', label:'Mistral Small 24B Instruct 2501', mb:14000, group:'🆕 Extra offline models', desc:'Heavyweight model offering near-frontier quality — needs significant RAM. Mistral lineage — efficient and accurate.', code:5, reason:5, speed:1},
+  {id:'onnx-community/Falcon3-Mamba-7B-Instruct-ONNX', label:'Falcon3 Mamba 7B Instruct', mb:4800, group:'🆕 Extra offline models', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. TII Falcon — open multilingual model.', code:4, reason:4, speed:2},
+  {id:'onnx-community/Falcon3-Mamba-1B-Instruct-ONNX', label:'Falcon3 Mamba 1B Instruct', mb:900, group:'🆕 Extra offline models', desc:'Compact generalist with solid everyday chat ability. TII Falcon — open multilingual model.', code:3, reason:3, speed:4},
+  {id:'onnx-community/cogito-v1-preview-llama-3B-ONNX', label:'Cogito v1 Llama 3B — hybrid reasoning', mb:2200, group:'🆕 Extra offline models', desc:'Reasoning-focused model that produces explicit chain-of-thought. Meta Llama lineage — versatile and well-supported.', code:5, reason:5, speed:3},
+  {id:'onnx-community/cogito-v1-preview-llama-8B-ONNX', label:'Cogito v1 Llama 8B — hybrid reasoning', mb:5200, group:'🆕 Extra offline models', desc:'Reasoning-focused model that produces explicit chain-of-thought. Meta Llama lineage — versatile and well-supported.', code:4, reason:5, speed:1},
+  {id:'onnx-community/Bitnet-b1.58-2B-4T-ONNX', label:'BitNet b1.58 2B (4T tokens)', mb:1100, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following.', code:3, reason:3, speed:4},
+  {id:'onnx-community/DRT-o1-7B', label:'DRT-o1 7B — long-CoT translation', mb:4800, group:'🆕 Extra offline models', desc:'Multilingual model strong at translation and cross-lingual chat.', code:3, reason:4, speed:2},
+  {id:'onnx-community/DRT-o1-14B', label:'DRT-o1 14B — long-CoT translation', mb:9000, group:'🆕 Extra offline models', desc:'Multilingual model strong at translation and cross-lingual chat.', code:4, reason:5, speed:1},
+  {id:'onnx-community/SmolLM3-3B-Base-ONNX', label:'SmolLM3 3B Base', mb:2200, group:'🆕 Extra offline models', desc:'Balanced mid-size model with broad knowledge and good instruction-following. Hugging Face SmolLM — purpose-built for tiny on-device chat.', code:4, reason:4, speed:3},
+  {id:'onnx-community/OLMo-2-1124-7B-Instruct-ONNX', label:'OLMo 2 7B Instruct', mb:5000, group:'🆕 Extra offline models', desc:'Large, capable generalist suited to nuanced conversation and complex tasks. AI2 OLMo — fully open weights and data.', code:4, reason:4, speed:1},
+  {id:'onnx-community/OLMo-2-1124-13B-Instruct-ONNX', label:'OLMo 2 13B Instruct', mb:8500, group:'🆕 Extra offline models', desc:'Heavyweight model offering near-frontier quality — needs significant RAM. AI2 OLMo — fully open weights and data.', code:5, reason:5, speed:1},
+  {id:'onnx-community/Qwen2.5-Coder-0.5B-Instruct-ONNX', label:'Qwen2.5 Coder 0.5B (ONNX build)', mb:450, group:'🆕 Extra offline models', desc:'Specialized for code generation, completion, and debugging. Qwen family — strong multilingual coverage.', code:4, reason:1, speed:4},
+  {id:'onnx-community/Qwen3-Coder-0.6B-ONNX', label:'Qwen3 Coder 0.6B', mb:500, group:'🆕 Extra offline models', desc:'Specialized for code generation, completion, and debugging. Qwen family — strong multilingual coverage.', code:4, reason:1, speed:4},
+  {id:'onnx-community/Qwen3-Coder-1.7B-ONNX', label:'Qwen3 Coder 1.7B', mb:1300, group:'🆕 Extra offline models', desc:'Specialized for code generation, completion, and debugging. Qwen family — strong multilingual coverage.', code:5, reason:2, speed:3},
+  {id:'onnx-community/Qwen3-Coder-4B-ONNX', label:'Qwen3 Coder 4B', mb:2900, group:'🆕 Extra offline models', desc:'Specialized for code generation, completion, and debugging. Qwen family — strong multilingual coverage.', code:5, reason:3, speed:2},
+  {id:'onnx-community/Qwen3-Math-1.7B-ONNX', label:'Qwen3 Math 1.7B', mb:1300, group:'🆕 Extra offline models', desc:'Tuned for mathematical reasoning and step-by-step problem solving. Qwen family — strong multilingual coverage.', code:2, reason:5, speed:3},
+  {id:'onnx-community/Qwen3-Math-4B-ONNX', label:'Qwen3 Math 4B', mb:2900, group:'🆕 Extra offline models', desc:'Tuned for mathematical reasoning and step-by-step problem solving. Qwen family — strong multilingual coverage.', code:3, reason:5, speed:2},
+  {id:'onnx-community/Boomer-634M-ONNX', label:'Boomer 634M — efficient mini', mb:520, group:'🆕 Extra offline models', desc:'Compact generalist with solid everyday chat ability.', code:2, reason:2, speed:4},
 ];
 
 let availableMB=Infinity;
 function buildModelOptions(){
   modelSel.innerHTML='';
+  // 🚀 Super Mode — multi-model ensemble with aggregator
+  const superOg=document.createElement('optgroup'); superOg.label='🚀 Super Mode (ensemble)';
+  const superOpt=document.createElement('option');
+  superOpt.value='__super__';
+  superOpt.textContent='🚀 Super Mode — SmolLM2 + LaMini-T5 + Qwen2.5 → LFM2 aggregator (~1.0 GB)';
+  superOg.appendChild(superOpt);
+  modelSel.appendChild(superOg);
+
   const byGroup=new Map();
   for(const m of MODELS){ if(!byGroup.has(m.group)) byGroup.set(m.group,[]); byGroup.get(m.group).push(m); }
   for(const [group,items] of byGroup){
@@ -893,14 +1636,158 @@ function buildModelOptions(){
     modelSel.appendChild(og);
   }
   let last=null; try{last=localStorage.getItem('ai:lastModel')}catch{}
-  if(last && MODELS.some(m=>m.id===last)) modelSel.value=last;
+  if(last && (last==='__super__' || MODELS.some(m=>m.id===last))) modelSel.value=last;
   else {
     const want=['onnx-community/Qwen3-1.7B-ONNX','onnx-community/Llama-3.2-1B-Instruct-q4f16','onnx-community/Qwen2.5-0.5B-Instruct','HuggingFaceTB/SmolLM2-360M-Instruct'];
     for(const id of want){ const m=MODELS.find(x=>x.id===id); if(m && m.mb<availableMB-200){modelSel.value=id; break;} }
     if(!modelSel.value) modelSel.value=MODELS[0].id;
   }
+  syncModelPickerButton();
   setStatus('Pick a model and click Load');
 }
+
+/* =========================================================================
+   MODEL PICKER (custom popover UI over hidden <select>)
+   ========================================================================= */
+const modelPickerBtn = $('modelPickerBtn');
+const modelPicker = $('modelPicker');
+const mpBody = $('mpBody');
+const mpChips = $('mpChips');
+const mpSearch = $('mpSearch');
+const mpClose = $('mpClose');
+const mpCount = $('mpCount');
+let mpFilter = 'all';
+
+function fmtSize(mb){ return mb<1000 ? mb+' MB' : (mb/1024).toFixed(1)+' GB'; }
+
+function syncModelPickerButton(){
+  const v = modelSel.value;
+  const labelEl = modelPickerBtn.querySelector('.mb-label');
+  const sizeEl  = modelPickerBtn.querySelector('.mb-size');
+  if(v === '__super__'){
+    labelEl.textContent = '🚀 Super Mode';
+    sizeEl.textContent = '~1.0 GB';
+  } else {
+    const m = MODELS.find(x => x.id === v);
+    if(m){ labelEl.textContent = m.label.split(' — ')[0]; sizeEl.textContent = fmtSize(m.mb); }
+    else { labelEl.textContent = 'Choose a model…'; sizeEl.textContent = '—'; }
+  }
+}
+
+function renderModelPicker(){
+  const q = (mpSearch.value || '').trim().toLowerCase();
+  const groups = new Map();
+  // Super mode pseudo-entry
+  const allGroups = ['🚀 Super Mode (ensemble)'];
+  groups.set('🚀 Super Mode (ensemble)', [{
+    id:'__super__', label:'🚀 Super Mode — SmolLM2 + LaMini-T5 + Qwen2.5 → LFM2 aggregator',
+    mb:1000, group:'🚀 Super Mode (ensemble)'
+  }]);
+  for(const m of MODELS){
+    if(!groups.has(m.group)){ groups.set(m.group, []); allGroups.push(m.group); }
+    groups.get(m.group).push(m);
+  }
+
+  // chips
+  if(!mpChips.dataset.built){
+    mpChips.innerHTML = '';
+    const mkChip = (label, val) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'mp-chip' + (val===mpFilter?' active':'');
+      b.textContent = label; b.dataset.val = val;
+      b.addEventListener('click', () => {
+        mpFilter = val;
+        mpChips.querySelectorAll('.mp-chip').forEach(c => c.classList.toggle('active', c.dataset.val===val));
+        renderModelPicker();
+      });
+      mpChips.appendChild(b);
+    };
+    mkChip('All', 'all');
+    for(const g of allGroups) mkChip(g.replace(/^[^\w]+\s*/, '').replace(/\s*\(.*\)$/, ''), g);
+    mpChips.dataset.built = '1';
+  }
+
+  const matches = (m) => {
+    if(mpFilter !== 'all' && m.group !== mpFilter) return false;
+    if(!q) return true;
+    return (m.label + ' ' + m.id + ' ' + m.group).toLowerCase().includes(q);
+  };
+
+  mpBody.innerHTML = '';
+  if(mpCount) mpCount.textContent = MODELS.length + ' offline models';
+  const selected = modelSel.value;
+  let total = 0;
+  for(const g of allGroups){
+    const items = (groups.get(g) || []).filter(matches);
+    if(!items.length) continue;
+    total += items.length;
+    const h = document.createElement('div'); h.className = 'mp-group-title'; h.textContent = g;
+    mpBody.appendChild(h);
+    const grid = document.createElement('div'); grid.className = 'mp-grid';
+    for(const m of items){
+      const fits = m.mb < availableMB - 100;
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'mp-card' + (m.id===selected?' selected':'') + (fits?'':' warn');
+      card.dataset.id = m.id;
+      const main = m.label.split(' — ')[0];
+      const sub  = m.label.split(' — ').slice(1).join(' — ') || m.id;
+      const bars = (n) => {
+        const v = Math.max(0, Math.min(5, n|0));
+        let s = '';
+        for(let i=1;i<=5;i++) s += '<span class="pl-pip'+(i<=v?' on':'')+'"></span>';
+        return s;
+      };
+      const desc = m.desc || '';
+      const cV = m.code|0, rV = m.reason|0, sV = m.speed|0;
+      card.innerHTML = `
+        <div class="mp-card-top">
+          <div class="mp-card-label">${main}</div>
+          <div class="mp-card-size">${fmtSize(m.mb)}</div>
+        </div>
+        <div class="mp-card-id">${sub}</div>
+        ${desc ? `<div class="mp-card-desc">${desc}</div>` : ''}
+        ${(cV||rV||sV) ? `
+          <div class="mp-card-power" title="Power levels (1-5)">
+            <div class="pl-row"><span class="pl-lbl">💻 Code</span><span class="pl-bars">${bars(cV)}</span></div>
+            <div class="pl-row"><span class="pl-lbl">🧠 Reason</span><span class="pl-bars">${bars(rV)}</span></div>
+            <div class="pl-row"><span class="pl-lbl">⚡ Speed</span><span class="pl-bars">${bars(sV)}</span></div>
+          </div>` : ''}
+        ${fits ? '' : '<div class="mp-card-warn" title="May exceed available memory">⚠</div>'}
+      `;
+      card.addEventListener('click', () => {
+        modelSel.value = m.id;
+        syncModelPickerButton();
+        closeModelPicker();
+      });
+      grid.appendChild(card);
+    }
+    mpBody.appendChild(grid);
+  }
+  if(!total){
+    mpBody.innerHTML = '<div class="mp-empty">No models match your search.</div>';
+  }
+}
+
+function openModelPicker(){
+  modelPicker.hidden = false;
+  requestAnimationFrame(() => modelPicker.classList.add('open'));
+  modelPickerBtn.setAttribute('aria-expanded','true');
+  renderModelPicker();
+  setTimeout(() => mpSearch.focus(), 60);
+}
+function closeModelPicker(){
+  modelPicker.classList.remove('open');
+  modelPickerBtn.setAttribute('aria-expanded','false');
+  setTimeout(() => { modelPicker.hidden = true; }, 280);
+}
+modelPickerBtn.addEventListener('click', openModelPicker);
+mpClose.addEventListener('click', closeModelPicker);
+modelPicker.addEventListener('click', (e) => { if(e.target === modelPicker) closeModelPicker(); });
+mpSearch.addEventListener('input', renderModelPicker);
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && !modelPicker.hidden) closeModelPicker();
+});
 function setStatus(msg,cls){ statusEl.textContent=msg; dot.className='dot'+(cls?' '+cls:''); }
 
 /* =========================================================================
@@ -909,18 +1796,18 @@ function setStatus(msg,cls){ statusEl.textContent=msg; dot.className='dot'+(cls?
 function addMsg(role, text=''){
   const div=document.createElement('div'); div.className='msg '+role;
   const b=document.createElement('div'); b.className='bubble';
-  const span=document.createElement('span'); span.className='txt'; span.textContent=text;
+  const span=document.createElement('div'); span.className='txt'; renderMessageText(span,text);
   b.appendChild(span); div.appendChild(b);
   if(role==='bot'){
     const a=document.createElement('div'); a.className='row-actions';
     const cp=document.createElement('button'); cp.textContent='Copy'; cp.type='button';
-    cp.onclick=()=>{navigator.clipboard?.writeText(span.textContent||'').then(()=>{cp.textContent='✓'; setTimeout(()=>cp.textContent='Copy',1200);});};
+    cp.onclick=()=>{navigator.clipboard?.writeText(span.dataset.rawText||'').then(()=>{cp.textContent='✓'; setTimeout(()=>cp.textContent='Copy',1200);});};
     a.appendChild(cp); b.appendChild(a);
   }
   chat.appendChild(div); chat.scrollTop=chat.scrollHeight;
   return new Proxy(b,{
-    set(t,p,v){ if(p==='textContent'){span.textContent=v; return true;} t[p]=v; return true; },
-    get(t,p){ if(p==='textContent') return span.textContent; const v=t[p]; return typeof v==='function'?v.bind(t):v; }
+    set(t,p,v){ if(p==='textContent'){renderMessageText(span,v); return true;} t[p]=v; return true; },
+    get(t,p){ if(p==='textContent') return span.dataset.rawText||''; const v=t[p]; return typeof v==='function'?v.bind(t):v; }
   });
 }
 
@@ -1016,15 +1903,17 @@ function buildMessages(userText){
 /* =========================================================================
    LIVE SOURCES: Wikipedia, Britannica, BBC News
    ========================================================================= */
-const CORS_PROXY='https://api.allorigins.win/raw?url=';
+const DEFAULT_CORS_PROXY='https://api.allorigins.win/raw?url=';
+let CORS_PROXY=(()=>{ try{ return localStorage.getItem('corsProxy') ?? DEFAULT_CORS_PROXY; }catch{ return DEFAULT_CORS_PROXY; } })();
+let generationAbort=null, stopRequested=false;
 
 async function fetchJSON(url, {timeout=8000, headers}={}){
-  return withTimeout(fetch(url,{headers:headers||{'Accept':'application/json'}}).then(r=>{
+  return withTimeout(fetch(url,{headers:headers||{'Accept':'application/json'}, signal:busy?generationAbort?.signal:undefined}).then(r=>{
     if(!r.ok) throw new Error('HTTP '+r.status); return r.json();
   }), timeout);
 }
 async function fetchText(url, {timeout=10000, headers}={}){
-  return withTimeout(fetch(url,{headers:headers||{}}).then(r=>{
+  return withTimeout(fetch(url,{headers:headers||{}, signal:busy?generationAbort?.signal:undefined}).then(r=>{
     if(!r.ok) throw new Error('HTTP '+r.status); return r.text();
   }), timeout);
 }
@@ -1404,6 +2293,24 @@ newChatBtn.addEventListener('click', async ()=>{
 /* =========================================================================
    STARTUP
    ========================================================================= */
+function renderSpecs(){
+  const chips=$('specsChips'); if(!chips) return;
+  const items=[
+    {label:`${HW_CORES} cores`, on:HW_CORES>=4},
+    {label:DEV_MEM_GB?`${DEV_MEM_GB} GB RAM`:'RAM ?', on:!DEV_MEM_GB||DEV_MEM_GB>=4},
+    {label:HAS_WEBGPU?'WebGPU on':'WebGPU off', on:HAS_WEBGPU, off:!HAS_WEBGPU},
+    {label:HAS_SAB?`${ORT_THREADS}-thread WASM`:'1-thread WASM', on:HAS_SAB, off:!HAS_SAB},
+    {label:HAS_FLOAT16?'f16':'f32 only', on:HAS_FLOAT16, off:!HAS_FLOAT16},
+    {label:'OPFS '+(OPFS_AVAILABLE?'on':'off'), on:OPFS_AVAILABLE, off:!OPFS_AVAILABLE},
+    {label:navigator.onLine?'Online':'Offline', on:navigator.onLine, off:!navigator.onLine},
+  ];
+  if(GPU_INFO?.vendor) items.push({label:`${GPU_INFO.vendor}${GPU_INFO.architecture?' · '+GPU_INFO.architecture:''}`, on:true});
+  chips.innerHTML=items.map(c=>`<span class="chip ${c.on?'on':''} ${c.off?'off':''}">${c.label}</span>`).join('');
+  const gpuEl=$('specsGpu');
+  if(gpuEl) gpuEl.textContent = GPU_INFO ? `GPU: ${GPU_INFO.vendor||'?'} ${GPU_INFO.architecture||''} ${GPU_INFO.device||''}`.trim() : '';
+  const corsInput=$('specsCors'); if(corsInput && !corsInput.dataset.init){ corsInput.value=CORS_PROXY; corsInput.dataset.init='1'; }
+}
+window.renderSpecs = renderSpecs;
 (async ()=>{
   try{
     if(navigator.storage?.estimate){
@@ -1411,12 +2318,14 @@ newChatBtn.addEventListener('click', async ()=>{
       availableMB=Math.max(0,(quota-usage)/1048576);
       _bytesUsed=usage;
       const quotaGB=quota/(1024**3);
-      storageHint.innerHTML=`Browser storage: <b>${availableMB.toFixed(0)} MB</b> free (quota ${quotaGB.toFixed(2)} GB) · WebGPU ${HAS_WEBGPU?'on':'off'} · ${ORT_THREADS}-thread WASM · OPFS ${OPFS_AVAILABLE?'on':'off'} · <span id="tokRate"></span>`;
+      const sEl=$('specsStorage');
+      if(sEl) sEl.innerHTML=`Browser storage: <b>${availableMB.toFixed(0)} MB</b> free (quota ${quotaGB.toFixed(2)} GB)`;
       if(navigator.storage.persist) await navigator.storage.persist().catch(()=>{});
-    } else storageHint.textContent='Storage API unavailable.';
+    } else { const sEl=$('specsStorage'); if(sEl) sEl.textContent='Storage API unavailable.'; }
   }catch{}
   await detectBackend();
   renderHwChips();
+  renderSpecs();
   await opfsInit();
   await KB.load();
   await KB.ensureSeed(false);
@@ -1428,6 +2337,21 @@ newChatBtn.addEventListener('click', async ()=>{
   refreshUsageUI();
   buildModelOptions();
   loadSettings();
+  // CORS proxy controls
+  const corsSave=$('specsCorsSave'), corsReset=$('specsCorsReset'), corsInput=$('specsCors');
+  if(corsSave) corsSave.addEventListener('click',()=>{
+    CORS_PROXY=(corsInput.value||'').trim();
+    try{ localStorage.setItem('corsProxy', CORS_PROXY); }catch{}
+    corsSave.textContent='Saved ✓'; setTimeout(()=>corsSave.textContent='Save proxy',1200);
+  });
+  if(corsReset) corsReset.addEventListener('click',()=>{
+    CORS_PROXY=DEFAULT_CORS_PROXY;
+    try{ localStorage.setItem('corsProxy', CORS_PROXY); }catch{}
+    if(corsInput) corsInput.value=CORS_PROXY;
+  });
+  window.addEventListener('online', renderSpecs);
+  window.addEventListener('offline', renderSpecs);
+  setTimeout(()=>{updateFeedStatus(); scheduleFeedTick();}, 8000);
   setTimeout(()=>{updateFeedStatus(); scheduleFeedTick();}, 8000);
   // Initial BBC headline pull so news questions work immediately.
   if(srcBBC.checked && navigator.onLine) setTimeout(()=>ingestBBC().catch(()=>{}), 3000);
@@ -1464,6 +2388,11 @@ let lastUserMessage='';
 loadBtn.addEventListener('click', async ()=>{
   loadBtn.disabled=true; modelSel.disabled=true;
   const modelId=modelSel.value;
+  if(modelId==='__super__'){
+    try{ await loadSuperMode(); }
+    catch(e){ console.error(e); setStatus('Super Mode failed: '+e.message,'err'); loadBtn.disabled=false; modelSel.disabled=false; }
+    return;
+  }
   const meta=MODELS.find(m=>m.id===modelId);
   if(meta && meta.mb>availableMB-50){
     if(!confirm(`This model needs ~${meta.mb} MB but only ${availableMB.toFixed(0)} MB is available. Continue?`)){
@@ -1525,55 +2454,248 @@ loadBtn.addEventListener('click', async ()=>{
   }
 });
 
-/* ---------- Online mode ---------- */
-let onlineMode=false, onlineAbort=null;
-const onlineToggle=$('onlineToggle');
-try{onlineMode=localStorage.getItem('ai:online')==='1'}catch{}
-onlineToggle.checked=onlineMode;
-function applyOnline(){
-  if(onlineMode){ input.disabled=false; sendBtn.disabled=false; input.placeholder='Ask me anything (online)…'; setStatus('Online mode','ready'); }
-  else if(!model){ input.disabled=true; sendBtn.disabled=true; input.placeholder='Load a model first…'; }
-  else { input.placeholder='Ask me anything…'; }
-}
-onlineToggle.addEventListener('change',()=>{onlineMode=onlineToggle.checked; try{localStorage.setItem('ai:online', onlineMode?'1':'0')}catch{} applyOnline();});
-applyOnline();
+/* ---------- Online mode removed: fully offline ---------- */
+const onlineMode=false; let onlineAbort=null;
 
-async function generateOnline(userText, bubble){
-  const messages=buildMessages(userText);
-  onlineAbort=new AbortController();
-  const resp=await fetch('https://text.pollinations.ai/openai',{
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({messages, model:'openai-fast', stream:true, private:true, referrer:'offline-ai-chat'}),
-    signal:onlineAbort.signal,
-  });
-  if(!resp.ok||!resp.body) throw new Error('Online API '+resp.status);
-  const reader=resp.body.getReader(); const dec=new TextDecoder();
-  let acc='', buf='', tokCount=0; const t0=performance.now();
-  while(true){
-    const {value,done}=await reader.read(); if(done) break;
-    buf+=dec.decode(value,{stream:true});
-    let i;
-    while((i=buf.indexOf('\n'))>=0){
-      const line=buf.slice(0,i).trim(); buf=buf.slice(i+1);
-      if(!line.startsWith('data:')) continue;
-      const data=line.slice(5).trim();
-      if(data==='[DONE]'){ buf=''; break; }
-      try{
-        const j=JSON.parse(data);
-        const delta=j.choices?.[0]?.delta?.content||j.choices?.[0]?.message?.content||'';
-        if(delta){
-          acc+=delta; tokCount++;
-          bubble.textContent=acc; chat.scrollTop=chat.scrollHeight;
-          const dt=(performance.now()-t0)/1000;
-          const el=$('tokRate'); if(dt>.1 && el) el.textContent=`· ${(tokCount/dt).toFixed(1)} tok/s (online)`;
-        }
-      }catch{}
-    }
+/* =========================================================================
+   🚀 SUPER MODE — multi-model ensemble with aggregator
+   Workers: SmolLM2-135M-Instruct, LaMini-Flan-T5-248M, Qwen2.5-0.5B-Instruct
+   Aggregator: Liquid LFM2-350M
+   All four download in parallel; on each user turn the workers generate in
+   parallel and the aggregator synthesises the final streamed reply.
+   ========================================================================= */
+const SUPER = {
+  active:false,
+  tjs:null,
+  workers:[],      // [{id,label,tokenizer,model,kind:'causal'|'seq2seq'}]
+  aggregator:null, // {id,label,tokenizer,model,kind:'causal'}
+  AutoTokenizer:null, AutoModelForCausalLM:null, AutoModelForSeq2SeqLM:null,
+  TextStreamer:null, Tensor:null,
+  backend:'wasm', dtype:'q8',
+};
+const SUPER_SPECS = {
+  workers:[
+    {id:'HuggingFaceTB/SmolLM2-135M-Instruct', label:'SmolLM2 135M',  kind:'causal'},
+    {id:'Xenova/LaMini-Flan-T5-248M',          label:'LaMini-Flan-T5 248M', kind:'seq2seq'},
+    {id:'onnx-community/Qwen2.5-0.5B-Instruct',label:'Qwen2.5 0.5B', kind:'causal'},
+  ],
+  aggregator:{id:'onnx-community/LFM2-350M-ONNX', label:'Liquid LFM2 350M', kind:'causal'},
+};
+
+async function loadSuperMode(){
+  setStatus('🚀 Super Mode — loading transformers.js…');
+  const tjs=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0');
+  SUPER.tjs=tjs;
+  SUPER.AutoTokenizer=tjs.AutoTokenizer;
+  SUPER.AutoModelForCausalLM=tjs.AutoModelForCausalLM;
+  SUPER.AutoModelForSeq2SeqLM=tjs.AutoModelForSeq2SeqLM;
+  SUPER.TextStreamer=tjs.TextStreamer;
+  SUPER.Tensor=tjs.Tensor||(tjs.utils&&tjs.utils.Tensor)||(tjs.default&&tjs.default.Tensor);
+  StoppingCriteriaList=tjs.StoppingCriteriaList;
+  InterruptableStoppingCriteria=tjs.InterruptableStoppingCriteria;
+  TextStreamer=tjs.TextStreamer; Tensor=SUPER.Tensor;
+  const {env}=tjs;
+  env.allowLocalModels=false; env.useBrowserCache=true;
+  try{ const w=env?.backends?.onnx?.wasm; if(w){w.numThreads=ORT_THREADS; w.simd=true; w.proxy=ORT_THREADS>1;} }catch{}
+  if(typeof globalThis.Float16Array==='undefined'){
+    class F16 extends Uint16Array{} Object.defineProperty(F16,'name',{value:'Float16Array'}); globalThis.Float16Array=F16;
   }
-  return acc.trim()||'(no response)';
+  const {device:detected, f16:gpuF16}=await detectBackend();
+  const nativeF16=HAS_FLOAT16 && globalThis.Float16Array.toString().includes('[native code]');
+  const backend=nativeF16?detected:'wasm';
+  SUPER.backend=backend;
+  const dtypeCandidates = (backend==='webgpu' && gpuF16 && nativeF16) ? ['q4f16','q4','q8','fp32']
+                        : (nativeF16 ? ['q4','q8','fp32'] : ['fp32','q8','q4']);
+
+  // Per-model progress accounting → single combined progress bar
+  const totals=new Map(), loaded=new Map();
+  const all=[...SUPER_SPECS.workers, SUPER_SPECS.aggregator];
+  function mkProgress(specId){
+    return (p)=>{
+      if(p.status==='progress' && p.total){
+        const key=specId+'::'+(p.file||'');
+        totals.set(key,p.total); loaded.set(key,p.loaded);
+        let t=0,l=0; for(const v of totals.values())t+=v; for(const v of loaded.values())l+=v;
+        if(t>0){
+          bar.style.width=((l/t)*100).toFixed(1)+'%';
+          setStatus(`🚀 Super Mode — downloading ${(l/1048576).toFixed(0)} / ${(t/1048576).toFixed(0)} MB across 4 models…`);
+        }
+      }
+    };
+  }
+
+  async function loadOne(spec, isAggregator){
+    const cb=mkProgress(spec.id);
+    const tokenizer=await SUPER.AutoTokenizer.from_pretrained(spec.id, {progress_callback:cb});
+    const ModelClass = spec.kind==='seq2seq' ? SUPER.AutoModelForSeq2SeqLM : SUPER.AutoModelForCausalLM;
+    let mdl=null, lastErr=null;
+    for(const dtype of dtypeCandidates){
+      try{
+        mdl=await ModelClass.from_pretrained(spec.id, {dtype, device:backend, progress_callback:cb});
+        break;
+      }catch(err){
+        lastErr=err;
+        const m=String(err?.message||err).toLowerCase();
+        if(!m.includes('float16')&&!m.includes('dtype')&&!m.includes('unsupported')&&!m.includes('not found')) {
+          // try next dtype anyway
+        }
+      }
+    }
+    if(!mdl) throw new Error(`Could not load ${spec.label}: ${lastErr?.message||lastErr}`);
+    return {...spec, tokenizer, model:mdl};
+  }
+
+  setStatus('🚀 Super Mode — downloading 4 models in parallel…');
+  bar.style.width='0%';
+  // Parallel downloads
+  const results = await Promise.all([
+    ...SUPER_SPECS.workers.map(s=>loadOne(s,false)),
+    loadOne(SUPER_SPECS.aggregator, true),
+  ]);
+  SUPER.workers = results.slice(0, SUPER_SPECS.workers.length);
+  SUPER.aggregator = results[results.length-1];
+  SUPER.active = true;
+  // Set a dummy `model` so existing guards (`if(!model)`) pass.
+  model = SUPER.aggregator.model;
+  tokenizer = SUPER.aggregator.tokenizer;
+
+  bar.style.width='100%';
+  setStatus(`🚀 Super Mode ready — 3 workers + LFM2 aggregator (${backend.toUpperCase()})`,'ready');
+  try{localStorage.setItem('ai:lastModel','__super__')}catch{}
+  loadBtn.remove();
+  input.disabled=false; sendBtn.disabled=false;
+  input.placeholder='Ask the ensemble anything…'; input.focus();
+}
+
+/* Run a single worker model end-to-end (non-streaming) and return its text. */
+async function superRunWorker(worker, userText){
+  const Tensor=SUPER.Tensor;
+  if(worker.kind==='seq2seq'){
+    // LaMini-Flan-T5 — plain instruction prompt
+    const enc = await worker.tokenizer(userText, {return_tensors:'pt', truncation:true, max_length:512});
+    const out = await worker.model.generate({
+      ...enc,
+      max_new_tokens: Math.min(220, GEN.max_new_tokens),
+      do_sample: GEN.temperature>0,
+      temperature: GEN.temperature, top_p: GEN.top_p, top_k: GEN.top_k,
+      repetition_penalty: GEN.repetition_penalty,
+    });
+    const text = worker.tokenizer.batch_decode(out, {skip_special_tokens:true})[0]||'';
+    return text.trim();
+  }
+  // Causal: use chat template
+  const messages = buildMessages(userText);
+  let encoded;
+  try{ encoded = worker.tokenizer.apply_chat_template(messages,{add_generation_prompt:true, return_dict:true}); }
+  catch{
+    const flat = messages.map(m=>`${m.role}: ${m.content}`).join('\n')+'\nassistant:';
+    encoded = worker.tokenizer(flat, {return_tensors:'pt'});
+  }
+  const input_ids=encoded.input_ids;
+  const seqLen=input_ids.dims[input_ids.dims.length-1];
+  const batch=input_ids.dims.length>1?input_ids.dims[0]:1;
+  let attention_mask=encoded.attention_mask;
+  if(!attention_mask){
+    attention_mask=new Tensor('int64', new BigInt64Array(batch*seqLen).fill(1n), [batch,seqLen]);
+  }
+  const posData=new BigInt64Array(batch*seqLen);
+  for(let b=0;b<batch;b++) for(let i=0;i<seqLen;i++) posData[b*seqLen+i]=BigInt(i);
+  const position_ids=new Tensor('int64', posData, [batch,seqLen]);
+
+  const out = await worker.model.generate({
+    input_ids, attention_mask, position_ids,
+    max_new_tokens: Math.min(220, GEN.max_new_tokens),
+    do_sample: GEN.temperature>0,
+    temperature: GEN.temperature, top_p: GEN.top_p, top_k: GEN.top_k,
+    repetition_penalty: GEN.repetition_penalty,
+  });
+  // Strip the prompt
+  const outArr = out?.tolist ? out.tolist() : out;
+  const row = Array.isArray(outArr) ? (Array.isArray(outArr[0])?outArr[0]:outArr) : [];
+  const generated = row.slice(seqLen);
+  let text = worker.tokenizer.decode(generated, {skip_special_tokens:true})||'';
+  // Trim if the model rambles into a new role marker
+  const cut=text.search(/\n(?:user|assistant|system)\s*[:\n]/i);
+  if(cut>=0) text=text.slice(0,cut);
+  return text.trim();
+}
+
+/* Super Mode: run 3 workers in parallel, then stream the LFM2 aggregator. */
+async function generateSuper(userText, bubble){
+  if(stopRequested) return bubble.textContent.trim();
+  const txtEl = bubble.querySelector?.('.txt') || bubble;
+  txtEl.textContent = '🚀 Consulting 3 models in parallel…';
+
+  const workerResults = await Promise.allSettled(
+    SUPER.workers.map(w => superRunWorker(w, userText))
+  );
+  if(stopRequested) return bubble.textContent.trim();
+
+  const candidates = workerResults.map((r,i)=>({
+    label: SUPER.workers[i].label,
+    text: r.status==='fulfilled' ? (r.value||'(empty)') : `(error: ${r.reason?.message||r.reason})`,
+  }));
+
+  // Aggregator prompt
+  const sys = "You are an expert aggregator. You receive a user question and 3 candidate answers from smaller models. Synthesise the single best answer: keep what is accurate and useful, fix mistakes, drop contradictions, and write it in your own clear voice. Do not mention the candidate models. Do not list them. Just answer the user directly.";
+  const candidateBlock = candidates.map((c,i)=>`Candidate ${String.fromCharCode(65+i)} (${c.label}):\n${c.text}`).join('\n\n');
+  const aggUser = `User question:\n${userText}\n\n${candidateBlock}\n\nWrite the final answer now.`;
+  const agg = SUPER.aggregator;
+  let messages = [{role:'system', content:sys}, {role:'user', content:aggUser}];
+  let encoded;
+  try{ encoded = agg.tokenizer.apply_chat_template(messages,{add_generation_prompt:true, return_dict:true}); }
+  catch{
+    const flat = messages.map(m=>`${m.role}: ${m.content}`).join('\n')+'\nassistant:';
+    encoded = agg.tokenizer(flat, {return_tensors:'pt'});
+  }
+  const Tensor=SUPER.Tensor;
+  const input_ids=encoded.input_ids;
+  const seqLen=input_ids.dims[input_ids.dims.length-1];
+  const batch=input_ids.dims.length>1?input_ids.dims[0]:1;
+  let attention_mask=encoded.attention_mask;
+  if(!attention_mask){
+    attention_mask=new Tensor('int64', new BigInt64Array(batch*seqLen).fill(1n), [batch,seqLen]);
+  }
+  const posData=new BigInt64Array(batch*seqLen);
+  for(let b=0;b<batch;b++) for(let i=0;i<seqLen;i++) posData[b*seqLen+i]=BigInt(i);
+  const position_ids=new Tensor('int64', posData, [batch,seqLen]);
+
+  let acc='', tokCount=0; const t0=performance.now();
+  txtEl.textContent='';
+  try{ window.__streamStart?.(); }catch{}
+  const streamer=new SUPER.TextStreamer(agg.tokenizer,{
+    skip_prompt:true, skip_special_tokens:true,
+    callback_function:(chunk)=>{
+      if(stopRequested) return;
+      acc+=chunk; tokCount++;
+      const cut=acc.search(/\n(?:user|assistant|system)\s*[:\n]/i);
+      const visible=cut>=0?acc.slice(0,cut):acc;
+      bubble.textContent=visible;
+      chat.scrollTop=chat.scrollHeight;
+      try{ window.__streamFeed?.(visible); }catch{}
+      const dt=(performance.now()-t0)/1000;
+      const el=$('tokRate'); if(dt>.1 && el) el.textContent=`· ${(tokCount/dt).toFixed(1)} tok/s · 🚀`;
+    },
+  });
+  stopCriteria=InterruptableStoppingCriteria?new InterruptableStoppingCriteria():null;
+  const stopping_criteria=stopCriteria && StoppingCriteriaList?new StoppingCriteriaList([stopCriteria]):undefined;
+  await agg.model.generate({
+    input_ids, attention_mask, position_ids,
+    max_new_tokens:GEN.max_new_tokens, do_sample:GEN.temperature>0,
+    temperature:GEN.temperature, top_p:GEN.top_p, top_k:GEN.top_k,
+    repetition_penalty:GEN.repetition_penalty,
+    streamer, stopping_criteria,
+  });
+  let reply=acc.trim();
+  const cut=reply.search(/\n(?:user|assistant|system)\s*[:\n]/i);
+  if(cut>=0) reply=reply.slice(0,cut).trim();
+  try{ window.__streamEnd?.(reply); }catch{}
+  return reply||'(no response)';
 }
 
 async function generateLocal(userText, bubble){
+  if(stopRequested) return bubble.textContent.trim();
+  if(SUPER.active) return generateSuper(userText, bubble);
   let messages=buildMessages(userText);
   let encoded=tokenizer.apply_chat_template(messages,{add_generation_prompt:true, return_dict:true});
   const MAX_CTX=2048;
@@ -1596,13 +2718,17 @@ async function generateLocal(userText, bubble){
   const position_ids=new Tensor('int64', posData, [batch,seqLen]);
 
   let acc='', tokCount=0; const t0=performance.now();
+  try{ window.__streamStart?.(); }catch{}
   const streamer=new TextStreamer(tokenizer,{
     skip_prompt:true, skip_special_tokens:true,
     callback_function:(chunk)=>{
+      if(stopRequested) return;
       acc+=chunk; tokCount++;
       const cut=acc.search(/\n(?:user|assistant|system)\s*[:\n]/i);
-      bubble.textContent=cut>=0?acc.slice(0,cut):acc;
+      const visible=cut>=0?acc.slice(0,cut):acc;
+      bubble.textContent=visible;
       chat.scrollTop=chat.scrollHeight;
+      try{ window.__streamFeed?.(visible); }catch{}
       const dt=(performance.now()-t0)/1000;
       const el=$('tokRate'); if(dt>.1 && el) el.textContent=`· ${(tokCount/dt).toFixed(1)} tok/s`;
     },
@@ -1619,6 +2745,7 @@ async function generateLocal(userText, bubble){
   let reply=acc.trim();
   const cut=reply.search(/\n(?:user|assistant|system)\s*[:\n]/i);
   if(cut>=0) reply=reply.slice(0,cut).trim();
+  try{ window.__streamEnd?.(reply); }catch{}
   return reply||'(no response)';
 }
 
@@ -1651,84 +2778,81 @@ function addMediaMsg(html){
   div.appendChild(b); chat.appendChild(div); chat.scrollTop=chat.scrollHeight;
   return b;
 }
+/* ============================================================
+   IMAGE GENERATION — Pollinations.ai
+   Free, key-less, URL-based text-to-image endpoint. No module
+   imports, no WebGPU, no model downloads — just a GET request
+   that returns a PNG. Cannot fail with "failed to fetch
+   dynamically imported module" because nothing is imported.
+   ============================================================ */
 async function genImage(prompt){
-  const p=(prompt||'').trim(); if(!p){ addMediaMsg('Please give an image prompt.'); return; }
-  const seed=Math.floor(Math.random()*1e9);
-  const url=`https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=768&height=768&seed=${seed}&nologo=true`;
-  const bubble=addMediaMsg(`<div style="opacity:.7;margin-bottom:6px;">🖼️ Generating image for: <i>${escHtml(p)}</i>…</div>`);
-  const img=new Image();
-  img.style.maxWidth='100%'; img.style.borderRadius='12px'; img.style.display='block';
-  img.onload=()=>{
-    bubble.innerHTML='';
-    bubble.appendChild(img);
-    const actions=document.createElement('div'); actions.style.marginTop='8px'; actions.style.display='flex'; actions.style.gap='8px';
-    const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.textContent='Open ↗'; a.style.fontSize='12px'; a.style.color='var(--accent)';
-    const d=document.createElement('a'); d.href=url; d.download=`image-${seed}.jpg`; d.textContent='Download ⬇'; d.style.fontSize='12px'; d.style.color='var(--accent)';
-    actions.appendChild(a); actions.appendChild(d); bubble.appendChild(actions);
-    chat.scrollTop=chat.scrollHeight;
-  };
-  img.onerror=()=>{ bubble.innerHTML=`Image generation failed. <a href="${url}" target="_blank" style="color:var(--accent);">Try opening directly ↗</a>`; };
-  img.src=url;
+  const p=(prompt||'').trim();
+  if(!p){ addMediaMsg('Please give an image prompt.'); return; }
+  const bubble=addMediaMsg(`<div style="opacity:.85;margin-bottom:6px;">🖼️ Generating image for: <i>${escHtml(p)}</i></div>`);
+  const W=1024, H=1024;
+
+  const status=document.createElement('div');
+  status.style.cssText='font-size:12px;opacity:.75;margin-top:6px;';
+  status.textContent='Generating image… (this can take 10–40s)';
+
+  const img=document.createElement('img');
+  img.width=W; img.height=H;
+  img.style.cssText='max-width:100%;height:auto;border-radius:12px;display:block;background:#0a0a0a;';
+  img.alt=p;
+  // NOTE: do NOT set crossOrigin — Pollinations doesn't always return CORS
+  // headers (especially on cache hits / 3xx), and crossOrigin='anonymous'
+  // turns those responses into onerror even though the image loaded fine.
+
+  bubble.innerHTML='';
+  bubble.appendChild(img);
+  bubble.appendChild(status);
+
+  const seed = Math.floor(Math.random()*1e9);
+  // Multiple providers tried in order. All free, key-less, GET-based.
+  const candidates = [
+    `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=${W}&height=${H}&seed=${seed}&nologo=true&enhance=true`,
+    `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=${W}&height=${H}&seed=${seed}&nologo=true`,
+    `https://pollinations.ai/p/${encodeURIComponent(p)}?width=${W}&height=${H}&seed=${seed}&nologo=true`,
+  ];
+
+  const tryLoad = (src) => new Promise((resolve)=>{
+    let done=false;
+    const timer=setTimeout(()=>{ if(done) return; done=true; resolve(false); }, 90000);
+    img.onload  = ()=>{ if(done) return; done=true; clearTimeout(timer); resolve(true);  };
+    img.onerror = ()=>{ if(done) return; done=true; clearTimeout(timer); resolve(false); };
+    img.src = src;
+  });
+
+  let loadedUrl = null;
+  for(const url of candidates){
+    const ok = await tryLoad(url);
+    if(ok){ loadedUrl = url; break; }
+    status.textContent = 'Retrying with a different route…';
+  }
+
+  if(!loadedUrl){
+    status.style.color='var(--err)';
+    status.textContent = '❌ Could not reach an image provider. The browser blocked the request or all providers timed out. Try again in a moment.';
+    img.remove();
+    return;
+  }
+
+  status.textContent = 'Done.';
+  const actions=document.createElement('div');
+  actions.style.cssText='margin-top:8px;display:flex;gap:12px;';
+  const a=document.createElement('a');
+  a.href=loadedUrl; a.target='_blank'; a.rel='noopener';
+  a.textContent='Open ↗'; a.style.cssText='font-size:12px;color:var(--accent);';
+  const d=document.createElement('a');
+  d.href=loadedUrl; d.download=`image-${Date.now()}.png`; d.target='_blank'; d.rel='noopener';
+  d.textContent='Download ⬇'; d.style.cssText='font-size:12px;color:var(--accent);';
+  actions.appendChild(a); actions.appendChild(d);
+  bubble.appendChild(actions);
 }
-async function genVideo(prompt){
-  const p=(prompt||'').trim(); if(!p){ addMediaMsg('Please give a video prompt.'); return; }
-  const bubble=addMediaMsg(`<div style="opacity:.7;margin-bottom:6px;">🎬 Generating animated video for: <i>${escHtml(p)}</i>… (creating frames, this takes ~15s)</div>`);
-  try{
-    // Build 4 keyframe images from Pollinations, then animate them into a WebM via canvas+MediaRecorder.
-    const frames=[];
-    for(let i=0;i<4;i++){
-      const seed=Math.floor(Math.random()*1e9);
-      const u=`https://image.pollinations.ai/prompt/${encodeURIComponent(p+', cinematic frame '+(i+1))}?width=640&height=640&seed=${seed}&nologo=true`;
-      frames.push(await new Promise((res,rej)=>{const im=new Image(); im.crossOrigin='anonymous'; im.onload=()=>res(im); im.onerror=rej; im.src=u;}));
-    }
-    const c=document.createElement('canvas'); c.width=640; c.height=640;
-    const ctx=c.getContext('2d');
-    const stream=c.captureStream(30);
-    const mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm';
-    const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:2_500_000});
-    const chunks=[]; rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
-    const done=new Promise(res=>rec.onstop=res);
-    rec.start();
-    const FPS=30, PER=60; // 2s per frame × 4 = 8s with crossfade
-    const total=frames.length*PER;
-    const t0=performance.now();
-    for(let f=0; f<total; f++){
-      const idx=Math.floor(f/PER), local=(f%PER)/PER;
-      const a=frames[idx], b=frames[(idx+1)%frames.length];
-      // Ken Burns zoom
-      const z=1+0.08*local;
-      ctx.save(); ctx.fillStyle='#000'; ctx.fillRect(0,0,640,640);
-      ctx.globalAlpha=1; ctx.drawImage(a,(640-640*z)/2,(640-640*z)/2,640*z,640*z);
-      ctx.globalAlpha=local; ctx.drawImage(b,0,0,640,640);
-      ctx.restore();
-      await new Promise(r=>setTimeout(r, 1000/FPS));
-    }
-    rec.stop(); await done;
-    const blob=new Blob(chunks,{type:mime}); const url=URL.createObjectURL(blob);
-    bubble.innerHTML='';
-    const v=document.createElement('video'); v.src=url; v.controls=true; v.autoplay=true; v.loop=true; v.muted=true;
-    v.style.maxWidth='100%'; v.style.borderRadius='12px'; v.style.display='block';
-    bubble.appendChild(v);
-    const dl=document.createElement('a'); dl.href=url; dl.download='video.webm'; dl.textContent='Download ⬇'; dl.style.fontSize='12px'; dl.style.color='var(--accent)'; dl.style.marginTop='8px'; dl.style.display='inline-block';
-    bubble.appendChild(dl);
-    chat.scrollTop=chat.scrollHeight;
-  }catch(e){ bubble.innerHTML='Video generation failed: '+escHtml(e.message); }
-}
-async function genSpeech(text){
-  const t=(text||'').trim(); if(!t){ addMediaMsg('Please give some text to speak.'); return; }
-  if(!('speechSynthesis' in window)){ addMediaMsg('Your browser does not support speech synthesis.'); return; }
-  const bubble=addMediaMsg(`🔊 Speaking: <i>${escHtml(t)}</i>`);
-  const u=new SpeechSynthesisUtterance(t);
-  const voices=speechSynthesis.getVoices();
-  const eng=voices.find(v=>/en[-_]/i.test(v.lang)); if(eng) u.voice=eng;
-  u.rate=1; u.pitch=1;
-  const btn=document.createElement('button'); btn.textContent='⏹ Stop'; btn.className='secondary'; btn.style.marginLeft='8px'; btn.style.padding='2px 10px'; btn.style.fontSize='12px';
-  btn.onclick=()=>speechSynthesis.cancel();
-  bubble.appendChild(document.createElement('br'));
-  bubble.appendChild(btn);
-  u.onend=()=>{btn.disabled=true; btn.textContent='✓ done';};
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
-}
+
+
+
+
 
 
 async function liveGrounding(text){
@@ -1748,20 +2872,17 @@ async function send(userTextOverride){
   let text=(userTextOverride??input.value).trim(); if(!text) return; if(text.length>8000) text=text.slice(0,8000);
 
   // Slash commands — work without a loaded model
-  const slash=text.match(/^\/(image|img|video|vid|speak|say|tts)\s+([\s\S]+)/i);
+  const slash=text.match(/^\/(image|img)\s+([\s\S]+)/i);
   if(slash){
     if(!userTextOverride){ input.value=''; input.style.height='auto'; }
     addMsg('user', text);
-    const cmd=slash[1].toLowerCase(), arg=slash[2].trim();
-    if(/^(image|img)$/.test(cmd)) await genImage(arg);
-    else if(/^(video|vid)$/.test(cmd)) await genVideo(arg);
-    else await genSpeech(arg);
+    await genImage(slash[2].trim());
     return;
   }
 
   if(!onlineMode && !model){
     addMsg('user', text);
-    addMsg('bot','Load a model first (or use /image, /video, /speak which work without a model).');
+    addMsg('bot','Load a model first (or use /image which works without a model).');
     if(!userTextOverride){ input.value=''; input.style.height='auto'; }
     return;
   }
@@ -1784,32 +2905,50 @@ async function send(userTextOverride){
     return;
   }
 
-  busy=true; sendBtn.disabled=true; input.disabled=true; stopBtn.style.display='';
+  busy=true; stopRequested=false; generationAbort=new AbortController();
+  sendBtn.disabled=true; input.disabled=true; stopBtn.disabled=false; stopBtn.textContent='⏹ Stop'; stopBtn.style.display='';
   const bubble=addMsg('bot',''); bubble.classList.add('cursor');
   try{
     LIVE_FACTS=[];
     if(GEN.live_snippets>0){
-      bubble.textContent='Looking up live sources…';
+      const txtEl=bubble.querySelector('.txt');
+      if(txtEl){ txtEl.dataset.rawText=''; txtEl.innerHTML='<span class="lookup-indicator"><span class="bounce-dots"><i></i><i></i><i></i></span></span>'; }
       try{ LIVE_FACTS=await liveGrounding(text); }catch(e){console.warn('grounding',e);}
+      if(stopRequested) throw new DOMException('Stopped','AbortError');
       bubble.textContent='';
     }
     // Only inject KB/live facts when retrieval found something the user's text actually anchors on.
     // (retrieve() already filters by BM25 score; if nothing scored, the prompt stays lean.)
     const reply=await (onlineMode?generateOnline(text,bubble):generateLocal(text,bubble));
-    bubble.textContent=reply;
-    CHATS.current.messages.push({role:'assistant', content:reply});
+    const finalReply=(reply||bubble.textContent||'').trim()+(stopRequested?'\n\n_Stopped._':'');
+    bubble.textContent=finalReply;
+    CHATS.current.messages.push({role:'assistant', content:finalReply});
     await CHATS.save();
     await refreshBytes(); refreshUsageUI();
-  }catch(e){console.error(e); bubble.textContent='Error: '+e.message;}
+  }catch(e){
+    if(stopRequested || e?.name==='AbortError'){
+      const partial=(bubble.textContent||'').replace(/^Looking up live sources…$/,'').trim();
+      const stopped=(partial?partial+'\n\n':'')+'_Stopped._';
+      bubble.textContent=stopped;
+      CHATS.current.messages.push({role:'assistant', content:stopped});
+      await CHATS.save();
+    } else { console.error(e); bubble.textContent='Error: '+e.message; }
+  }
   finally{
     bubble.classList.remove('cursor');
     busy=false; sendBtn.disabled=false; input.disabled=false; stopBtn.style.display='none';
-    stopCriteria=null; input.focus();
+    stopCriteria=null; onlineAbort=null; generationAbort=null; input.focus();
   }
 }
 
 
-stopBtn.addEventListener('click',()=>{try{stopCriteria?.interrupt?.()}catch{} try{onlineAbort?.abort?.()}catch{}});
+stopBtn.addEventListener('click',()=>{
+  if(!busy || stopRequested) return;
+  stopRequested=true; stopBtn.disabled=true; stopBtn.textContent='Stopping…';
+  try{stopCriteria?.interrupt?.()}catch{}
+  try{generationAbort?.abort?.()}catch{}
+  try{onlineAbort?.abort?.()}catch{}
+});
 regenBtn.addEventListener('click', async ()=>{
   if(busy || (!model && !onlineMode) || !lastUserMessage || !CHATS.current) return;
   // Pop last assistant + last user from messages
@@ -1833,11 +2972,226 @@ function promptAndSend(prefix, label){
   send(prefix+' '+v);
 }
 document.getElementById('mediaImg').addEventListener('click',()=>promptAndSend('/image','Describe the image to generate:'));
-document.getElementById('mediaVid').addEventListener('click',()=>promptAndSend('/video','Describe the video to generate:'));
-document.getElementById('mediaAud').addEventListener('click',()=>promptAndSend('/speak','Text to speak:'));
+
 
 
 setInterval(()=>refreshBytes().then(refreshUsageUI), 30000);
+
+/* ================= Voice Mode (offline Web Speech API) ================= */
+(function(){
+  const micBtn = document.getElementById('mic');
+  if(!micBtn) return;
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const synth = window.speechSynthesis;
+  let recog = null, voiceMode = false, listening = false, speaking = false, lastSpoken = '';
+
+  // Style mic states
+  const style = document.createElement('style');
+  style.textContent = `
+    #mic{transition:all .2s;}
+    #mic.active{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;box-shadow:0 0 0 4px rgba(239,68,68,.25);animation:micPulse 1.2s ease-in-out infinite;}
+    #mic.listening{background:linear-gradient(135deg,#38e0d4,#06b6d4);color:#04212a;box-shadow:0 0 0 4px rgba(56,224,212,.3);}
+    #mic.speaking{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#3a2400;}
+    @keyframes micPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  `;
+  document.head.appendChild(style);
+
+  function updateMic(){
+    micBtn.classList.toggle('active', voiceMode);
+    micBtn.classList.toggle('listening', listening);
+    micBtn.classList.toggle('speaking', speaking);
+    micBtn.textContent = speaking ? '🔊' : (listening ? '🎙️' : '🎤');
+    micBtn.title = voiceMode
+      ? 'Voice mode ON — click to stop' + (listening?' (listening…)':speaking?' (speaking…)':'')
+      : 'Click to start voice mode';
+  }
+
+  function pickVoice(){
+    const voices = synth.getVoices();
+    return voices.find(v=>/en[-_]/i.test(v.lang) && /female|samantha|zira|google.*us/i.test(v.name))
+        || voices.find(v=>/^en/i.test(v.lang))
+        || voices[0];
+  }
+
+  function cleanForTTS(text){
+    return String(text||'')
+      .replace(/```[\s\S]*?```/g,' code block omitted ')
+      .replace(/`([^`]+)`/g,'$1')
+      .replace(/[#*_>~]/g,'')
+      .replace(/\[(.*?)\]\(.*?\)/g,'$1')
+      .replace(/!\[.*?\]\(.*?\)/g,'')
+      .replace(/\s+/g,' ')
+      .trim();
+  }
+  function enqueueUtterance(text){
+    const clean = cleanForTTS(text);
+    if(!clean || !synth) return;
+    const u = new SpeechSynthesisUtterance(clean.slice(0, 1500));
+    const v = pickVoice(); if(v) u.voice = v;
+    u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
+    speaking = true; updateMic();
+    if(listening && recog){ try{recog.stop();}catch{} }
+    u.onend = u.onerror = ()=>{
+      if(synth.pending || synth.speaking) return;
+      speaking = false; updateMic();
+      if(voiceMode && !streamingActive) startListening();
+    };
+    synth.speak(u);
+  }
+  function speak(text){
+    if(!text || !synth) return;
+    try{ synth.cancel(); }catch{}
+    enqueueUtterance(text);
+  }
+
+  // ---- Real-time streaming TTS ----
+  let streamingActive = false, streamSpokenIdx = 0, streamedThisReply = false;
+  function flushSentences(fullText, force){
+    const text = fullText.slice(streamSpokenIdx);
+    if(!text) return;
+    // Find last sentence terminator in `text` (., !, ?, newline, : when long)
+    const re = /[\.!\?\n](?=\s|$)|[。！？]/g;
+    let m, lastEnd = -1;
+    while((m = re.exec(text)) !== null) lastEnd = m.index + 1;
+    let chunk;
+    if(lastEnd > 0){
+      chunk = text.slice(0, lastEnd).trim();
+      streamSpokenIdx += lastEnd;
+    } else if(force){
+      chunk = text.trim();
+      streamSpokenIdx += text.length;
+    } else if(text.length > 240){
+      // Long run with no terminator — break at last space
+      const sp = text.lastIndexOf(' ', 200);
+      const cut = sp > 40 ? sp : text.length;
+      chunk = text.slice(0, cut).trim();
+      streamSpokenIdx += cut;
+    } else return;
+    if(chunk && voiceMode) enqueueUtterance(chunk);
+  }
+  window.__streamStart = ()=>{
+    streamingActive = true; streamSpokenIdx = 0; streamedThisReply = false;
+    try{ synth.cancel(); }catch{}
+    if(listening && recog){ try{recog.stop();}catch{} }
+  };
+  window.__streamFeed = (fullText)=>{
+    if(!voiceMode) return;
+    streamedThisReply = true;
+    flushSentences(fullText, false);
+  };
+  window.__streamEnd = (fullText)=>{
+    if(voiceMode && fullText) flushSentences(fullText, true);
+    streamingActive = false;
+  };
+
+  function startListening(){
+    if(!recog || listening || speaking) return;
+    try{ recog.start(); listening = true; updateMic(); }
+    catch(e){ /* already started */ }
+  }
+  function stopListening(){
+    if(!recog) return;
+    try{ recog.stop(); }catch{}
+    listening = false; updateMic();
+  }
+
+  function initRecog(){
+    if(!SR){ alert('Voice input not supported in this browser. Try Chrome or Edge.'); return false; }
+    recog = new SR();
+    recog.lang = 'en-US';
+    recog.interimResults = true;
+    recog.continuous = false;
+    recog.maxAlternatives = 1;
+
+    let finalText = '';
+    recog.onstart = ()=>{ listening = true; finalText=''; updateMic(); };
+    recog.onresult = (ev)=>{
+      let interim = '';
+      finalText = '';
+      for(let i=0;i<ev.results.length;i++){
+        const r = ev.results[i];
+        if(r.isFinal) finalText += r[0].transcript;
+        else interim += r[0].transcript;
+      }
+      const input = document.getElementById('input');
+      if(input) input.value = (finalText || interim).trim();
+    };
+    recog.onerror = (e)=>{
+      console.warn('speech recog error', e.error);
+      listening = false; updateMic();
+      if(voiceMode && e.error !== 'not-allowed' && e.error !== 'service-not-allowed'){
+        setTimeout(()=>{ if(voiceMode && !speaking) startListening(); }, 800);
+      } else if(e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+        voiceMode = false; updateMic();
+        alert('Microphone permission denied.');
+      }
+    };
+    recog.onend = ()=>{
+      listening = false; updateMic();
+      const input = document.getElementById('input');
+      const text = (input?.value||'').trim();
+      if(text && voiceMode){
+        // submit it
+        const sendBtn = document.getElementById('send');
+        if(sendBtn && !sendBtn.disabled){
+          sendBtn.click();
+        } else if(voiceMode && !speaking){
+          // model not ready; just keep listening
+          setTimeout(startListening, 600);
+        }
+      } else if(voiceMode && !speaking){
+        setTimeout(startListening, 300);
+      }
+    };
+    return true;
+  }
+
+  // Observe sendBtn disabled transitions: re-enable = reply done -> speak last bot bubble
+  const sendBtnEl = document.getElementById('send');
+  let wasDisabled = sendBtnEl?.disabled ?? true;
+  new MutationObserver(()=>{
+    const nowDisabled = sendBtnEl.disabled;
+    if(wasDisabled && !nowDisabled){
+      // Just finished generating
+      if(voiceMode){
+        if(streamedThisReply){
+          // Streaming TTS already handled this reply
+          streamedThisReply = false;
+          if(!speaking && !synth.speaking && !synth.pending) startListening();
+        } else {
+          const bots = document.querySelectorAll('#chat .msg.bot .bubble');
+          const last = bots[bots.length-1];
+          if(last){
+            const txt = last.querySelector('.txt')?.innerText || last.innerText || '';
+            if(txt && txt !== lastSpoken){ lastSpoken = txt; speak(txt); }
+            else if(voiceMode && !speaking) startListening();
+          }
+        }
+      }
+    }
+    wasDisabled = nowDisabled;
+  }).observe(sendBtnEl, {attributes:true, attributeFilter:['disabled']});
+
+  micBtn.addEventListener('click', ()=>{
+    if(!SR && !synth){ alert('Voice features not supported in this browser.'); return; }
+    voiceMode = !voiceMode;
+    if(voiceMode){
+      if(!recog && !initRecog()){ voiceMode = false; updateMic(); return; }
+      // Warm up voices list
+      if(synth && synth.getVoices().length===0){ synth.onvoiceschanged = ()=>{}; }
+      updateMic();
+      startListening();
+    } else {
+      stopListening();
+      try{ synth.cancel(); }catch{}
+      speaking = false; updateMic();
+    }
+  });
+
+  updateMic();
+})();
+
 </script>
 </body>
 </html>
