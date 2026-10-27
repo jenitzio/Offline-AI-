@@ -2,13 +2,12 @@
 
 An offline AI hub with two ways to get started: a **Simple** experience for straightforward local AI use, and a **Multi-Model** experience for working with different models.
 
-> **Project goal:** make locally run AI easier to explore while keeping privacy, user choice, and offline use at the centre.
+> **Project goal:** make locally run AI easier to explore while keeping privacy, user choice, and offline use at the center.
 
 ## Overview
 
-Offline AI is a hub for accessing AI tools without depending on a hosted chatbot for every interaction. It is organised around two routes:
+Offline AI is a hub for accessing AI tools without depending on a hosted chatbot for every interaction. It is organized around two routes:
 
-- **Simple version** — a streamlined starting point for people who want a straightforward AI experience.
 - **Multi-model version** — a route for users who want to choose between, or work with, multiple AI models.
 
 The exact features available depend on the implementation and the models configured on your device.
@@ -42,7 +41,7 @@ Local AI performance depends on several factors:
 
 - **RAM / VRAM:** larger models generally require more memory.
 - **Processor and accelerator:** supported GPUs or other accelerators can improve performance, depending on the runtime.
-- **Model size and quantisation:** smaller or quantised models are often more practical on everyday computers.
+- **Model size and quantization:** smaller or quantized models are often more practical on everyday computers.
 - **Context length:** longer conversations can increase memory use.
 
 If a model is too slow or fails to load, try a smaller compatible model and check the runtime's requirements.
@@ -66,6 +65,6 @@ Suggestions, bug reports, and improvements are welcome. When reporting an issue,
 - The steps needed to reproduce the issue.
 - Any relevant error message, with secrets and personal data removed.
 
-## Licence
+## License
 
-A licence has not been specified in this README. Check the repository for a `LICENSE` file before reusing or redistributing the project.
+A license has not been specified in this README. Check the repository for a `LICENSE` file before reusing or redistributing the project.
